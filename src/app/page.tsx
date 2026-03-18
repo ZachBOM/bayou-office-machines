@@ -16,6 +16,7 @@ import {
   Mail,
   MapPin,
 } from "lucide-react";
+import Image from "next/image";
 import LoginModal from "@/components/LoginModal";
 
 /* ─── animation variants ─── */
@@ -85,6 +86,33 @@ const services = [
     icon: Lightbulb,
     title: "Tech Consultation",
     desc: "Not sure what you need? We assess your workflow and recommend the perfect fit.",
+  },
+];
+
+const toshibaProducts = [
+  {
+    model: 'e-STUDIO4525AC',
+    tag: 'Color MFP',
+    desc: 'Mid-volume color A3 multifunction — print, copy, scan, fax. Built for busy offices.',
+    img: '/products/toshiba-eSTUDIO4525AC.jpg',
+  },
+  {
+    model: 'e-STUDIO6525AC',
+    tag: 'High-Volume Color',
+    desc: 'High-speed color output with advanced finishing options for large workgroups.',
+    img: '/products/toshiba-eSTUDIO6525AC.jpg',
+  },
+  {
+    model: 'e-STUDIO5528A',
+    tag: 'Monochrome MFP',
+    desc: 'Fast, reliable monochrome for document-heavy environments. Low cost per page.',
+    img: '/products/toshiba-eSTUDIO5528A.jpg',
+  },
+  {
+    model: 'e-STUDIO2829A',
+    tag: 'Compact Desktop',
+    desc: 'Space-saving desktop MFP perfect for small offices and personal workspaces.',
+    img: '/products/toshiba-eSTUDIO2829A.jpg',
   },
 ];
 
@@ -299,6 +327,57 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           HIGHLIGHTS — Horizontal Scroll
       ═══════════════════════════════════════════════ */}
+      {/* ═══════════════════════════════════════════════
+          TOSHIBA PRODUCTS
+      ═══════════════════════════════════════════════ */}
+      <Section id="products" className="py-24 bg-[#0d0d0d]">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.p variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a84c] mb-3">
+            Authorized Toshiba Dealer
+          </motion.p>
+          <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-extrabold text-[#f5f5f5] mb-2">
+            Toshiba e-STUDIO Lineup
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-[#9ca3af] text-base mb-12 max-w-xl">
+            We sell, install, and service the full Toshiba MFP lineup across South Louisiana. Contact us for pricing.
+          </motion.p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {toshibaProducts.map((p, i) => (
+              <motion.div
+                key={p.model}
+                variants={fadeUp}
+                custom={i}
+                className="bg-[#111111] border border-[#1f1f1f] rounded-2xl overflow-hidden group hover:border-[#800000]/40 hover:-translate-y-1 transition-all duration-300"
+              >
+                <div className="bg-white p-6 flex items-center justify-center h-48">
+                  <Image
+                    src={p.img}
+                    alt={`Toshiba ${p.model}`}
+                    width={200}
+                    height={160}
+                    className="object-contain h-full w-full"
+                  />
+                </div>
+                <div className="p-5">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-[#c9a84c] bg-[#c9a84c]/10 px-2.5 py-1 rounded-full">
+                    {p.tag}
+                  </span>
+                  <h3 className="font-bold text-[#f5f5f5] mt-3 mb-2">{p.model}</h3>
+                  <p className="text-[#9ca3af] text-sm leading-relaxed">{p.desc}</p>
+                  <a
+                    href="tel:9856937811"
+                    className="mt-4 flex items-center gap-1 text-[#800000] text-xs font-semibold group-hover:gap-2 transition-all"
+                  >
+                    Get a quote <ChevronRight size={13} />
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
       <Section id="highlights" className="py-24 bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between px-6 mb-8">
