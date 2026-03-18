@@ -122,7 +122,7 @@ const highlights = [
 ];
 
 const stats = [
-  { value: "28+", label: "Years in Business" },
+  { value: "30+", label: "Years in Business" },
   { value: "200+", label: "Active Contracts" },
   { value: "2-4 Hr", label: "Response Time" },
   { value: "Family", label: "Owned & Operated" },
@@ -442,33 +442,6 @@ export default function Home() {
               </button>
             </motion.div>
 
-            {/* Staff Portal */}
-            <motion.div
-              variants={fadeUp}
-              className="relative bg-[#111111] rounded-xl overflow-hidden border border-[#1f1f1f] p-8 group"
-              style={{
-                background:
-                  "linear-gradient(135deg, #111111 0%, #0a0f15 100%)",
-              }}
-            >
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#800000] via-[#c9a84c] to-[#800000]" />
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a84c] mb-4">
-                Team Members
-              </p>
-              <h3 className="text-2xl font-extrabold text-[#f5f5f5] mb-3">
-                Staff Portal
-              </h3>
-              <p className="text-[#9ca3af] text-sm leading-relaxed mb-8">
-                Service tickets, dispatch management, customer account management, inventory,
-                scheduling, and internal business tools for the Bayou Office Machines team.
-              </p>
-              <button
-                onClick={() => setModalType("staff")}
-                className="px-6 py-3 border border-[#800000] text-white hover:bg-[#800000]/20 font-semibold text-sm rounded-lg transition-all duration-200"
-              >
-                Staff Login
-              </button>
-            </motion.div>
           </div>
         </div>
       </Section>
@@ -505,13 +478,13 @@ export default function Home() {
                   <span className="font-medium">985-693-7811</span>
                 </a>
                 <a
-                  href="mailto:bayouoffice@bayouoffice.com"
+                  href="mailto:sales@bayouoffice.com"
                   className="flex items-center gap-4 text-[#9ca3af] hover:text-[#800000] transition-colors group"
                 >
                   <div className="w-10 h-10 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center group-hover:border-[#800000]/40 transition-colors">
                     <Mail size={16} className="text-[#800000]" />
                   </div>
-                  <span className="font-medium">bayouoffice@bayouoffice.com</span>
+                  <span className="font-medium">sales@bayouoffice.com</span>
                 </a>
                 <div className="flex items-center gap-4 text-[#9ca3af]">
                   <div className="w-10 h-10 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center">
@@ -598,18 +571,6 @@ export default function Home() {
                       className="text-[#9ca3af] group-hover:text-[#800000] transition-colors"
                     />
                   </button>
-                  <button
-                    onClick={() => setModalType("staff")}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg hover:border-[#800000]/40 transition-colors group"
-                  >
-                    <span className="text-sm font-medium text-[#f5f5f5]">
-                      Staff Login Help
-                    </span>
-                    <ChevronRight
-                      size={16}
-                      className="text-[#9ca3af] group-hover:text-[#800000] transition-colors"
-                    />
-                  </button>
                 </div>
 
                 <div className="flex flex-col gap-2 text-sm text-[#9ca3af]">
@@ -631,7 +592,7 @@ export default function Home() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-[#9ca3af]">
                     <span>Monday – Friday</span>
-                    <span className="text-[#f5f5f5]">8:00 AM – 5:00 PM</span>
+                    <span className="text-[#f5f5f5]">8:00 AM – 4:00 PM</span>
                   </div>
                   <div className="flex justify-between text-[#9ca3af]">
                     <span>Saturday</span>

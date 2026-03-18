@@ -14,8 +14,8 @@ export default function ContactPage() {
         </p>
         <p>
           <span className="font-semibold text-gray-900">Email:</span>{" "}
-          <a href="mailto:bayouoffice@bayouoffice.com" className="hover:underline" style={{ color: "#6B1F1F" }}>
-            bayouoffice@bayouoffice.com
+          <a href="mailto:sales@bayouoffice.com" className="hover:underline" style={{ color: "#6B1F1F" }}>
+            sales@bayouoffice.com
           </a>
         </p>
         <p>

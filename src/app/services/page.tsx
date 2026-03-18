@@ -11,8 +11,8 @@ export default function ServicesPage() {
           985-693-7811
         </a>{" "}
         or email{" "}
-        <a href="mailto:bayouoffice@bayouoffice.com" className="font-semibold" style={{ color: "#6B1F1F" }}>
-          bayouoffice@bayouoffice.com
+        <a href="mailto:sales@bayouoffice.com" className="font-semibold" style={{ color: "#6B1F1F" }}>
+          sales@bayouoffice.com
         </a>
         .
       </p>

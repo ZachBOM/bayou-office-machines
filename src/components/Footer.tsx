@@ -66,11 +66,11 @@ export default function Footer() {
                 985-693-7811
               </a>
               <a
-                href="mailto:bayouoffice@bayouoffice.com"
+                href="mailto:sales@bayouoffice.com"
                 className="flex items-center gap-2.5 text-[#9ca3af] hover:text-[#f5f5f5] transition-colors text-sm"
               >
                 <Mail size={14} className="text-[#800000] flex-shrink-0" />
-                bayouoffice@bayouoffice.com
+                sales@bayouoffice.com
               </a>
               <div className="flex items-start gap-2.5 text-[#9ca3af] text-sm">
                 <MapPin size={14} className="text-[#800000] flex-shrink-0 mt-0.5" />
