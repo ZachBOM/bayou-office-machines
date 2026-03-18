@@ -26,6 +26,12 @@ export const metadata: Metadata = {
     "Bayou Office Machines",
     "office supplies Larose LA",
   ],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Bayou OM",
+  },
 };
 
 export default function RootLayout({

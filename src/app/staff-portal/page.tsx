@@ -25,8 +25,10 @@ export default function StaffPortal() {
     }
 
     const role = data.user.user_metadata?.role;
-    if (role === 'admin' || role === 'staff') {
+    if (role === 'admin') {
       router.push('/staff-portal/dashboard');
+    } else if (role === 'staff') {
+      router.push('/staff-portal/clock');
     } else {
       await supabase.auth.signOut();
       setError('You do not have staff access.');

@@ -1,0 +1,17 @@
+{
+  "name": "Bayou Office Machines",
+  "short_name": "Bayou OM",
+  "description": "Bayou Office Machines staff and customer portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#800000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
