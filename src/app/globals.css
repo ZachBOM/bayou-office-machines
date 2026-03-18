@@ -11,6 +11,16 @@
   --muted: #9ca3af;
 }
 
+/* Light mode */
+html.light {
+  filter: invert(1) hue-rotate(180deg);
+}
+html.light img,
+html.light video,
+html.light [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 html {
   scroll-behavior: smooth;
 }

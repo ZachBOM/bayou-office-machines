@@ -3,27 +3,38 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, Settings, Sun, Moon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 const navLinks = [
-  { href: "#hero", label: "Home" },
-  { href: "#about", label: "About" },
-  { href: "#services", label: "Services" },
-  { href: "#highlights", label: "Equipment" },
-  { href: "#contact", label: "Contact" },
+  { href: "/#hero", label: "Home" },
+  { href: "/#about", label: "About" },
+  { href: "/#services", label: "Services" },
+  { href: "/#highlights", label: "Equipment" },
+  { href: "/#contact", label: "Contact" },
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [lightMode, setLightMode] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lightMode") === "true";
+    setLightMode(saved);
+    document.documentElement.classList.toggle("light", saved);
   }, []);
 
   useEffect(() => {
@@ -36,19 +47,33 @@ export default function Navbar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  function toggleLightMode() {
+    const next = !lightMode;
+    setLightMode(next);
+    localStorage.setItem("lightMode", String(next));
+    document.documentElement.classList.toggle("light", next);
+  }
+
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-      if (href.startsWith("#")) {
-        e.preventDefault();
-        const id = href.slice(1);
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
+      setMobileOpen(false);
+      setSettingsOpen(false);
+      if (href.startsWith("/#")) {
+        const id = href.slice(2);
+        if (pathname === "/") {
+          e.preventDefault();
+          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+        } else {
+          e.preventDefault();
+          router.push("/");
+          // after navigation scroll to section
+          setTimeout(() => {
+            document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+          }, 400);
         }
-        setMobileOpen(false);
       }
     },
-    []
+    [pathname, router]
   );
 
   const role = user?.user_metadata?.role;
@@ -60,127 +85,171 @@ export default function Navbar() {
     : "My Portal";
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#800000]/40 shadow-lg shadow-black/50"
-          : "bg-[#0a0a0a]/80 backdrop-blur-sm border-b border-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <a
-            href="#hero"
-            onClick={(e) => handleNavClick(e, "#hero")}
-            className="flex items-center gap-2 flex-shrink-0"
-          >
-            <Image
-              src="/logo.png"
-              alt="Bayou Office Machines"
-              height={40}
-              width={120}
-              className="object-contain h-10 w-auto"
-              priority
-            />
-          </a>
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? "bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#800000]/40 shadow-lg shadow-black/50"
+            : "bg-[#0a0a0a]/80 backdrop-blur-sm border-b border-transparent"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <a
+              href="/#hero"
+              onClick={(e) => handleNavClick(e, "/#hero")}
+              className="flex items-center gap-2 flex-shrink-0"
+            >
+              <Image
+                src="/logo.png"
+                alt="Bayou Office Machines"
+                height={40}
+                width={120}
+                className="object-contain h-10 w-auto"
+                priority
+              />
+            </a>
 
-          {/* Center nav links — desktop */}
-          <nav className="hidden md:flex items-center gap-1">
+            {/* Center nav links — desktop */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className="relative px-4 py-2 text-sm font-medium text-[#f5f5f5] hover:text-white transition-colors group"
+                >
+                  {link.label}
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#800000] group-hover:w-4/5 transition-all duration-300 rounded-full" />
+                </a>
+              ))}
+            </nav>
+
+            {/* Right buttons — desktop */}
+            <div className="hidden md:flex items-center gap-3">
+              {/* Settings button */}
+              <div className="relative">
+                <button
+                  onClick={() => setSettingsOpen((p) => !p)}
+                  className="w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af] hover:text-[#f5f5f5] hover:border-[#800000]/40 transition-colors"
+                >
+                  <Settings size={16} />
+                </button>
+                {settingsOpen && (
+                  <div className="absolute right-0 top-12 w-52 bg-[#111111] border border-[#1f1f1f] rounded-xl shadow-2xl p-3 z-50">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] px-2 mb-2">Display</p>
+                    <button
+                      onClick={toggleLightMode}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors text-sm text-[#f5f5f5]"
+                    >
+                      <div className="flex items-center gap-2">
+                        {lightMode ? <Moon size={15} className="text-[#c9a84c]" /> : <Sun size={15} className="text-[#c9a84c]" />}
+                        {lightMode ? "Dark Mode" : "Light Mode"}
+                      </div>
+                      <div className={`w-8 h-4 rounded-full transition-colors ${lightMode ? "bg-[#800000]" : "bg-[#1f1f1f]"}`}>
+                        <div className={`w-3 h-3 bg-white rounded-full mt-0.5 transition-transform ${lightMode ? "translate-x-4" : "translate-x-0.5"}`} />
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {user ? (
+                <Link
+                  href={dashboardHref}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
+                >
+                  {dashboardLabel}
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/customer-portal"
+                    className="px-4 py-2 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-all duration-200"
+                  >
+                    Customer Login
+                  </Link>
+                  <Link
+                    href="/staff-portal"
+                    className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
+                  >
+                    Staff Login
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden text-[#f5f5f5] p-2 rounded-lg hover:bg-white/10 transition-colors"
+              onClick={() => setMobileOpen((prev) => !prev)}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden bg-[#0a0a0a] border-t border-[#1f1f1f] px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="relative px-4 py-2 text-sm font-medium text-[#f5f5f5] hover:text-white transition-colors group"
+                className="block px-4 py-3 text-sm font-medium text-[#f5f5f5] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               >
                 {link.label}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#800000] group-hover:w-4/5 transition-all duration-300 rounded-full" />
               </a>
             ))}
-          </nav>
 
-          {/* Right buttons — desktop */}
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <Link
-                href={dashboardHref}
-                className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
-              >
-                {dashboardLabel}
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/customer-portal"
-                  className="px-4 py-2 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-all duration-200"
-                >
-                  Customer Login
-                </Link>
-                <Link
-                  href="/staff-portal"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
-                >
-                  Staff Login
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden text-[#f5f5f5] p-2 rounded-lg hover:bg-white/10 transition-colors"
-            onClick={() => setMobileOpen((prev) => !prev)}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-[#0a0a0a] border-t border-[#1f1f1f] px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link.href)}
-              className="block px-4 py-3 text-sm font-medium text-[#f5f5f5] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            {/* Light mode toggle in mobile */}
+            <button
+              onClick={toggleLightMode}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#9ca3af] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             >
-              {link.label}
-            </a>
-          ))}
-          <div className="pt-3 pb-1 flex flex-col gap-2">
-            {user ? (
-              <Link
-                href={dashboardHref}
-                onClick={() => setMobileOpen(false)}
-                className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
-              >
-                {dashboardLabel}
-              </Link>
-            ) : (
-              <>
+              {lightMode ? <Moon size={16} /> : <Sun size={16} />}
+              {lightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            </button>
+
+            <div className="pt-3 pb-1 flex flex-col gap-2">
+              {user ? (
                 <Link
-                  href="/customer-portal"
-                  onClick={() => setMobileOpen(false)}
-                  className="w-full px-4 py-3 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors text-center block"
-                >
-                  Customer Login
-                </Link>
-                <Link
-                  href="/staff-portal"
+                  href={dashboardHref}
                   onClick={() => setMobileOpen(false)}
                   className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
                 >
-                  Staff Login
+                  {dashboardLabel}
                 </Link>
-              </>
-            )}
+              ) : (
+                <>
+                  <Link
+                    href="/customer-portal"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full px-4 py-3 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors text-center block"
+                  >
+                    Customer Login
+                  </Link>
+                  <Link
+                    href="/staff-portal"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
+                  >
+                    Staff Login
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </header>
+
+      {/* Close settings on outside click */}
+      {settingsOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setSettingsOpen(false)} />
       )}
-    </header>
+    </>
   );
 }
