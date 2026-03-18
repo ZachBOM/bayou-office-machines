@@ -11,11 +11,14 @@
 A full business web application with three distinct areas:
 
 ### 1. Public Website (anyone can visit)
-- Home, About, Services, Products, Contact pages — full marketing site
+- Home, About, Services, Products, Contact pages — full marketing site ✅
+- Contact form — sends to sales@bayouoffice.com via Resend ✅
 - "Request a Quote" form — collects visitor info and sends it to our team (no prices shown on site, we call them back)
 - Goal: generate new leads and help people understand who we are
 
 ### 2. Customer Portal (verified contract customers only)
+- Login page with real Supabase auth, proper error messages ✅
+- Dashboard with maroon sidebar and dropdown placeholders ✅
 - Customers sign up themselves but **cannot do anything until we approve their account**
 - Once approved and linked to a machine in our system, they can:
   - Submit service calls via a form with dropdowns (error codes, paper quality issues, noise issues, etc.)
@@ -25,6 +28,9 @@ A full business web application with three distinct areas:
 - **No automated emails/texts to customers** — all communication handled by our team directly
 
 ### 3. Worker/Admin Side (internal team only)
+- Staff login at /staff-portal with real Supabase auth ✅
+- Admin dashboard at /staff-portal/dashboard ✅
+- Admin account: zach@bayouoffice.com (role: admin) ✅
 - CRM to manage ~200 contract customers
 - Approve or deny new customer account requests
 - View and manage incoming service calls
@@ -66,12 +72,12 @@ This time log is **internal only** — visible to admin/dispatch, never shown to
 - **Note:** Role-based permissions (who sees what) will be added later — start with basics first
 
 ## Tech Stack
-- **Next.js** — The framework Claude Code uses to build the website (works perfectly with Vercel)
+- **Next.js** — The framework the website is built on
 - **GitHub** — Where all the code is stored and version controlled
 - **Vercel** — Hosts and deploys the website (auto-deploys when code changes on GitHub)
-- **PostHog** — Analytics: tracks how visitors use the public site, where they click, page views
-- **Supabase** — Database (stores customers, machines, service calls) + handles login/authentication + real-time location updates
-- **Resend** — Sends automated emails (account approval notifications, internal alerts, etc.)
+- **PostHog** — Analytics: tracks how visitors use the public site, where they click, page views ✅
+- **Supabase** — Database (stores customers, machines, service calls) + handles login/authentication + real-time location updates ✅
+- **Resend** — Sends emails (contact form → sales@bayouoffice.com) ✅
 - **Supabase Storage** — Stores uploaded photos and videos from service call submissions
 - **Google Maps API** — Powers the live tech dispatch map on the admin side
 
@@ -83,18 +89,18 @@ This time log is **internal only** — visible to admin/dispatch, never shown to
 5. Quote requests are open to anyone (logged in or not) — they just submit info and we call them
 6. All customer communication is handled by our team — no automated messages sent to customers
 
-## Current State
-- Starting from scratch — no existing code
-- Currently use a Toshiba-provided system to track customers/machines
-- Goal is to eventually have the new CRM work alongside or replace the Toshiba tracking system
-- Role-based access control (admin vs technician vs office staff) is a future phase
+## Current State (as of March 2026)
+- Public marketing site complete ✅
+- PostHog analytics live ✅
+- Contact form live → emails sales@bayouoffice.com ✅
+- Supabase connected, admin account created ✅
+- Staff portal login + admin dashboard live ✅
+- Customer portal login + dashboard live ✅
+- Next: customer sign-up flow, DB tables, service call form, CRM
 
-## What to Build
-1. Set up GitHub repo and connect to Vercel ✅
-2. Scaffold the project with Next.js
-3. Build the public-facing marketing pages
-4. Add Supabase for database and authentication
-5. Build the customer portal (sign up, approval flow, service call form with dropdowns + file upload)
-6. Build the worker/admin side (CRM, service call management, status tracking)
-7. Build the live dispatch map (Google Maps, real-time tech location, clock in/out)
-8. Add PostHog analytics on the public site
+## What's Next
+1. Customer sign-up / request access flow
+2. Supabase DB tables (customers, machines, service calls)
+3. Service call submission form (customer portal)
+4. Admin CRM — view/manage customers, approve accounts, manage service calls
+5. Live dispatch map (Google Maps, real-time tech location)
