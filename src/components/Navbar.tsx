@@ -84,12 +84,12 @@ export default function Navbar() {
 
             {/* Right buttons — desktop */}
             <div className="hidden md:flex items-center gap-3">
-              <button
-                onClick={() => setModalType("customer")}
+              <Link
+                href="/customer-portal"
                 className="px-4 py-2 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-all duration-200"
               >
                 Customer Login
-              </button>
+              </Link>
               <Link
                 href="/staff-portal"
                 className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
@@ -123,15 +123,13 @@ export default function Navbar() {
               </a>
             ))}
             <div className="pt-3 pb-1 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  setModalType("customer");
-                }}
-                className="w-full px-4 py-3 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors"
+              <Link
+                href="/customer-portal"
+                onClick={() => setMobileOpen(false)}
+                className="w-full px-4 py-3 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors text-center block"
               >
                 Customer Login
-              </button>
+              </Link>
               <Link
                 href="/staff-portal"
                 onClick={() => setMobileOpen(false)}
