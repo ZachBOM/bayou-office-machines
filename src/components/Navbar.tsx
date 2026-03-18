@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import LoginModal from "./LoginModal";
 
@@ -89,12 +90,12 @@ export default function Navbar() {
               >
                 Customer Login
               </button>
-              <button
-                onClick={() => setModalType("staff")}
+              <Link
+                href="/staff-portal"
                 className="px-4 py-2 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-all duration-200"
               >
                 Staff Login
-              </button>
+              </Link>
             </div>
 
             {/* Mobile hamburger */}
@@ -131,15 +132,13 @@ export default function Navbar() {
               >
                 Customer Login
               </button>
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  setModalType("staff");
-                }}
-                className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors"
+              <Link
+                href="/staff-portal"
+                onClick={() => setMobileOpen(false)}
+                className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
               >
                 Staff Login
-              </button>
+              </Link>
             </div>
           </div>
         )}
