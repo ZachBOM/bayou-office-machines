@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import {
@@ -93,7 +94,7 @@ export default function CustomerDashboard() {
         return;
       }
       const role = session.user.user_metadata?.role;
-      if (role === 'admin' || role === 'staff') {
+      if (role === 'staff') {
         router.push('/customer-portal');
         return;
       }
@@ -116,9 +117,17 @@ export default function CustomerDashboard() {
   }
 
   const email = user?.email;
+  const isAdminPreview = user?.user_metadata?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex pt-16">
+    <div className="min-h-screen bg-[#0a0a0a] flex flex-col pt-16">
+      {isAdminPreview && (
+        <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
+          <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as customer</p>
+          <Link href="/staff-portal/dashboard" className="text-xs text-[#c9a84c] hover:underline font-medium">← Back to Dashboard</Link>
+        </div>
+      )}
+    <div className="flex-1 flex">
       {/* Maroon sidebar */}
       <div className="w-64 flex-shrink-0 bg-[#800000] flex flex-col min-h-full">
         <div className="p-6 border-b border-white/10">
@@ -177,6 +186,7 @@ export default function CustomerDashboard() {
           </a>
         </div>
       </div>
+    </div>
     </div>
   );
 }

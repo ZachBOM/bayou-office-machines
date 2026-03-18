@@ -205,6 +205,25 @@ export default function AdminDashboard() {
           <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value="—" note="Coming soon" />
         </div>
 
+        {/* Preview views */}
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-3">Preview As</p>
+          <div className="flex gap-3">
+            <Link
+              href="/staff-portal/clock"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 rounded-lg text-sm text-[#9ca3af] hover:text-[#f5f5f5] transition-colors"
+            >
+              👷 Staff / Field Tech
+            </Link>
+            <Link
+              href="/customer-portal/dashboard"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 rounded-lg text-sm text-[#9ca3af] hover:text-[#f5f5f5] transition-colors"
+            >
+              🏢 Customer Portal
+            </Link>
+          </div>
+        </div>
+
         {/* Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DashSection title="Service Calls" description="View and manage incoming service calls, assign techs, and track status." badge="Coming Soon" />

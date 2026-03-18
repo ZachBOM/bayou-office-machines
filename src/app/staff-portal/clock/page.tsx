@@ -95,6 +95,12 @@ export default function ClockPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col pt-16 pb-24">
+      {isAdmin && (
+        <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
+          <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as staff</p>
+          <Link href="/staff-portal/dashboard" className="text-xs text-[#c9a84c] hover:underline font-medium">← Back to Dashboard</Link>
+        </div>
+      )}
 
       {/* Clock Tab */}
       {tab === 'clock' && (
