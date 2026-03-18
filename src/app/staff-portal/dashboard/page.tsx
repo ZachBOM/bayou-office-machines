@@ -14,6 +14,7 @@ import {
   Settings,
   UserPlus,
   X,
+  Clock,
 } from 'lucide-react';
 
 function CreateAccountModal({ onClose }: { onClose: () => void }) {
@@ -165,6 +166,13 @@ export default function AdminDashboard() {
             <h1 className="text-xl font-bold text-[#f5f5f5]">Welcome back, {name}</h1>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/staff-portal/clock"
+              className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] rounded-lg text-sm font-medium transition-colors"
+            >
+              <Clock size={14} />
+              Clock In/Out
+            </Link>
             <button
               onClick={() => setShowCreate(true)}
               className="flex items-center gap-2 px-4 py-2 bg-[#800000] hover:bg-[#600000] text-white rounded-lg text-sm font-medium transition-colors"

@@ -181,6 +181,14 @@ export default function ClockPage() {
 
         {/* Bottom links */}
         <div className="mt-10 flex items-center gap-6">
+          {user?.user_metadata?.role === 'admin' && (
+            <Link
+              href="/staff-portal/dashboard"
+              className="text-sm text-[#4b5563] hover:text-[#9ca3af] transition-colors"
+            >
+              ← Dashboard
+            </Link>
+          )}
           <Link
             href="/staff-portal/timesheet"
             className="flex items-center gap-1.5 text-sm text-[#4b5563] hover:text-[#9ca3af] transition-colors"
