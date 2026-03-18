@@ -23,11 +23,13 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const user_id = searchParams.get('user_id');
 
+  const limit = parseInt(searchParams.get('limit') || '10');
+
   const query = supabaseAdmin
     .from('time_entries')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(10);
+    .limit(limit);
 
   if (user_id) query.eq('user_id', user_id);
 

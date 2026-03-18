@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import { LogOut, Clock, Coffee, LogIn } from 'lucide-react';
+import Link from 'next/link';
+import { LogOut, Clock, Coffee, LogIn, FileText } from 'lucide-react';
 
 type Action = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
 type Status = 'out' | 'in' | 'on_break';
@@ -178,13 +179,22 @@ export default function ClockPage() {
           </div>
         )}
 
-        {/* Sign out */}
-        <button
-          onClick={handleSignOut}
-          className="mt-10 text-sm text-[#4b5563] hover:text-[#9ca3af] transition-colors"
-        >
-          Sign out
-        </button>
+        {/* Bottom links */}
+        <div className="mt-10 flex items-center gap-6">
+          <Link
+            href="/staff-portal/timesheet"
+            className="flex items-center gap-1.5 text-sm text-[#4b5563] hover:text-[#9ca3af] transition-colors"
+          >
+            <FileText size={14} />
+            View Timesheet
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="text-sm text-[#4b5563] hover:text-[#9ca3af] transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </div>
   );

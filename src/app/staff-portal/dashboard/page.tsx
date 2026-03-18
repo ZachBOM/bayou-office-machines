@@ -4,6 +4,7 @@ import { useEffect, useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
+import Link from 'next/link';
 import {
   Users,
   Wrench,
@@ -202,7 +203,7 @@ export default function AdminDashboard() {
           <DashSection title="Customer Accounts" description="Approve or deny customer portal sign-up requests and manage accounts." badge="Coming Soon" />
           <DashSection title="CRM — Customer List" description="Browse all ~200 contract customers, their machines, and service history." badge="Coming Soon" />
           <DashSection title="Dispatch Map" description="Live map showing all active tech locations during dispatched jobs." badge="Coming Soon" />
-          <DashSection title="Time & Attendance" description="View clock in/out records and hours worked for all staff members." badge="Coming Soon" />
+          <DashSection title="Time & Attendance" description="View clock in/out records and hours worked for all staff members." badge="Coming Soon" href="/staff-portal/timesheet" />
         </div>
       </div>
     </div>
@@ -222,14 +223,26 @@ function StatCard({ icon, label, value, note }: { icon: React.ReactNode; label: 
   );
 }
 
-function DashSection({ title, description, badge }: { title: string; description: string; badge: string }) {
-  return (
-    <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-6">
+function DashSection({ title, description, badge, href }: { title: string; description: string; badge: string; href?: string }) {
+  const inner = (
+    <>
       <div className="flex items-start justify-between mb-3">
         <h3 className="font-bold text-[#f5f5f5]">{title}</h3>
-        <span className="text-xs bg-[#800000]/10 text-[#c9a84c] border border-[#800000]/20 rounded-full px-2.5 py-0.5 font-medium">{badge}</span>
+        <span className={`text-xs border rounded-full px-2.5 py-0.5 font-medium ${href ? 'bg-[#800000]/20 text-white border-[#800000]/40' : 'bg-[#800000]/10 text-[#c9a84c] border-[#800000]/20'}`}>
+          {href ? 'Open →' : badge}
+        </span>
       </div>
       <p className="text-sm text-[#9ca3af] leading-relaxed">{description}</p>
-    </div>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 rounded-xl p-6 block transition-colors">
+        {inner}
+      </Link>
+    );
+  }
+
+  return <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-6">{inner}</div>;
 }
