@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import Link from 'next/link';
 import {
   Wrench,
   Printer,
@@ -12,7 +11,6 @@ import {
   TrendingUp,
   LogOut,
   ChevronDown,
-  Home,
 } from 'lucide-react';
 
 const navSections = [
@@ -139,14 +137,7 @@ export default function CustomerDashboard() {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-white/10 space-y-1">
-          <Link
-            href="/"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium"
-          >
-            <Home size={16} />
-            Back to Home
-          </Link>
+        <div className="p-3 border-t border-white/10">
           <button
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium"

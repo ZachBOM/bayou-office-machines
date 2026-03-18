@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import Link from 'next/link';
 import {
   Users,
   Wrench,
@@ -12,7 +11,6 @@ import {
   LogOut,
   Bell,
   Settings,
-  Home,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -64,13 +62,6 @@ export default function AdminDashboard() {
             <h1 className="text-xl font-bold text-[#f5f5f5]">Welcome back, {name}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] rounded-lg text-sm font-medium transition-colors"
-            >
-              <Home size={14} />
-              Home
-            </Link>
             <button className="w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af] hover:text-[#f5f5f5] hover:border-[#800000]/40 transition-colors">
               <Bell size={16} />
             </button>
