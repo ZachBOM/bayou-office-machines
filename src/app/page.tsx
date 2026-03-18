@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, FormEvent } from "react";
 import { motion, useInView, type Variants } from "framer-motion";
 import {
   Printer,
@@ -132,6 +132,20 @@ const stats = [
 export default function Home() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [modalType, setModalType] = useState<"customer" | "staff" | null>(null);
+  const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [contactStatus, setContactStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function handleContactSubmit(e: FormEvent) {
+    e.preventDefault();
+    setContactStatus("sending");
+    const res = await fetch("/api/contact", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(contactForm),
+    });
+    setContactStatus(res.ok ? "sent" : "error");
+    if (res.ok) setContactForm({ name: "", email: "", phone: "", message: "" });
+  }
 
   const scrollCards = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
@@ -497,46 +511,66 @@ export default function Home() {
               {/* Contact Form */}
               <motion.form
                 variants={fadeUp}
-                onSubmit={(e) => e.preventDefault()}
+                onSubmit={handleContactSubmit}
                 className="space-y-4"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">
-                      Name
-                    </label>
+                    <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">Name</label>
                     <input
                       type="text"
+                      required
                       placeholder="Your name"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm(f => ({ ...f, name: e.target.value }))}
                       className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000] transition-colors text-sm"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">
-                      Email
-                    </label>
+                    <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">Email</label>
                     <input
                       type="email"
+                      required
                       placeholder="you@example.com"
+                      value={contactForm.email}
+                      onChange={(e) => setContactForm(f => ({ ...f, email: e.target.value }))}
                       className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000] transition-colors text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">
-                    Message
-                  </label>
+                  <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">Phone (optional)</label>
+                  <input
+                    type="tel"
+                    placeholder="985-000-0000"
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm(f => ({ ...f, phone: e.target.value }))}
+                    className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000] transition-colors text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#f5f5f5] mb-1.5">Message</label>
                   <textarea
                     rows={4}
+                    required
                     placeholder="How can we help you?"
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm(f => ({ ...f, message: e.target.value }))}
                     className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] focus:ring-1 focus:ring-[#800000] transition-colors text-sm resize-none"
                   />
                 </div>
+                {contactStatus === "sent" && (
+                  <p className="text-green-400 text-sm">Message sent! We'll be in touch soon.</p>
+                )}
+                {contactStatus === "error" && (
+                  <p className="text-red-400 text-sm">Something went wrong. Please call us at 985-693-7811.</p>
+                )}
                 <button
                   type="submit"
-                  className="px-8 py-3 bg-[#800000] hover:bg-[#600000] text-white font-semibold text-sm rounded-lg transition-all duration-200"
+                  disabled={contactStatus === "sending"}
+                  className="px-8 py-3 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white font-semibold text-sm rounded-lg transition-all duration-200"
                 >
-                  Send Message
+                  {contactStatus === "sending" ? "Sending..." : "Send Message"}
                 </button>
               </motion.form>
             </div>
