@@ -269,10 +269,26 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           ABOUT
       ═══════════════════════════════════════════════ */}
-      <Section id="about" className="py-24 px-6 bg-[#0a0a0a]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left text */}
+      <Section id="about" className="bg-[#0a0a0a] overflow-hidden">
+        {/* Photo banner */}
+        <div className="relative w-full h-72 sm:h-96">
+          <Image
+            src="/office-exterior.jpg"
+            alt="Bayou Office Machines — our team"
+            fill
+            className="object-cover object-top"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-[#0a0a0a]" />
+          <div className="absolute bottom-6 left-6 sm:left-12">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a84c]">Family Owned &amp; Operated</span>
+            <p className="text-white font-bold text-xl sm:text-2xl mt-1 drop-shadow">Bayou Office Machines</p>
+          </div>
+        </div>
+
+        {/* Text + stats below */}
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
             <div>
               <motion.p
                 variants={fadeUp}
@@ -305,7 +321,6 @@ export default function Home() {
               </motion.p>
             </div>
 
-            {/* Right stats */}
             <div className="grid grid-cols-2 gap-4">
               {stats.map((stat) => (
                 <motion.div
