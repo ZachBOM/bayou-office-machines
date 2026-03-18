@@ -3,6 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PostHogProvider from "@/components/PostHogProvider";
+import PostHogPageView from "@/components/PostHogPageView";
+import { Suspense } from "react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,9 +36,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="antialiased bg-[#0a0a0a] text-[#f5f5f5]">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+        <PostHogProvider>
+          <Suspense>
+            <PostHogPageView />
+          </Suspense>
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
+        </PostHogProvider>
       </body>
     </html>
   );
