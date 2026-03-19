@@ -37,7 +37,7 @@ export default function StaffPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-6 pt-16">
+    <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6 pt-16">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
           <div className="inline-block bg-[#800000]/10 border border-[#800000]/30 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#c9a84c] mb-6">

@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/#about", label: "About" },
   { href: "/#services", label: "Services" },
   { href: "/#highlights", label: "Equipment" },
+  { href: "/articles", label: "Articles" },
   { href: "/#contact", label: "Contact" },
 ];
 
@@ -89,8 +90,8 @@ export default function Navbar() {
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#800000]/40 shadow-lg shadow-black/50"
-            : "bg-[#0a0a0a]/80 backdrop-blur-sm border-b border-transparent"
+            ? "bg-[#141414]/95 backdrop-blur-md border-b border-[#800000]/40 shadow-lg shadow-black/50"
+            : "bg-[#141414]/80 backdrop-blur-sm border-b border-transparent"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -193,7 +194,7 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden bg-[#0a0a0a] border-t border-[#1f1f1f] px-4 py-4 space-y-1">
+          <div className="md:hidden bg-[#141414] border-t border-[#1f1f1f] px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}

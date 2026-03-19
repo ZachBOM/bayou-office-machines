@@ -101,7 +101,7 @@ export default function TimesheetPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
         <p className="text-[#9ca3af] text-sm">Loading...</p>
       </div>
     );
@@ -124,7 +124,7 @@ export default function TimesheetPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#0a0a0a] pt-16">
+      <div className="min-h-screen bg-[#141414] pt-16">
         <div className="max-w-3xl mx-auto px-6 py-10">
 
           {/* Header */}

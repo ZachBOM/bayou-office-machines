@@ -130,7 +130,7 @@ export default function CustomerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
         <div className="text-[#9ca3af] text-sm">Loading...</div>
       </div>
     );
@@ -140,7 +140,7 @@ export default function CustomerDashboard() {
   const isAdminPreview = user?.user_metadata?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col pt-16">
+    <div className="min-h-screen bg-[#141414] flex flex-col pt-16">
       {isAdminPreview && (
         <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
           <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as customer</p>
@@ -224,7 +224,7 @@ export default function CustomerDashboard() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="How can we help you?"
-                className="w-full bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] text-sm resize-none"
+                className="w-full bg-[#141414] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] text-sm resize-none"
               />
               {msgStatus === 'error' && <p className="text-red-400 text-sm">Failed to send. Please call us at 985-693-7811.</p>}
               <button

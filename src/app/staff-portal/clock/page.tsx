@@ -90,7 +90,7 @@ function ClockPageInner() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
         <p className="text-[#9ca3af] text-sm">Loading...</p>
       </div>
     );
@@ -101,7 +101,7 @@ function ClockPageInner() {
   const isAdmin = user?.user_metadata?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col pt-16 pb-24">
+    <div className="min-h-screen bg-[#141414] flex flex-col pt-16 pb-24">
       {isPreview && (
         <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
           <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as staff</p>
@@ -295,7 +295,7 @@ function ClockPageInner() {
       )}
 
       {/* Bottom tab bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#0d0d0d] border-t border-[#1f1f1f] flex z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1f1f1f] flex z-40">
         <button
           onClick={() => setTab('clock')}
           className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${tab === 'clock' ? 'text-[#800000]' : 'text-[#4b5563] hover:text-[#9ca3af]'}`}
@@ -324,7 +324,7 @@ function ClockPageInner() {
 
 export default function ClockPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><p className="text-[#9ca3af] text-sm">Loading...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#141414] flex items-center justify-center"><p className="text-[#9ca3af] text-sm">Loading...</p></div>}>
       <ClockPageInner />
     </Suspense>
   );

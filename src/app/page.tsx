@@ -199,7 +199,7 @@ export default function Home() {
           <div className="orb-2 absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-[#800000]/15 blur-3xl" />
           <div className="orb-3 absolute top-1/2 left-1/2 w-64 h-64 rounded-full bg-[#c9a84c]/8 blur-3xl" />
           {/* radial gradient overlay */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a0000_0%,#0a0a0a_70%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a0000_0%,#141414_70%)]" />
         </div>
 
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center gap-6">
@@ -269,7 +269,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           ABOUT
       ═══════════════════════════════════════════════ */}
-      <Section id="about" className="bg-[#0a0a0a] overflow-hidden">
+      <Section id="about" className="bg-[#141414] overflow-hidden">
         {/* Photo banner */}
         <div className="relative w-full h-[420px] sm:h-[520px]">
           <Image
@@ -280,7 +280,7 @@ export default function Home() {
             priority
           />
           {/* Light top vignette + heavy fade at bottom into page */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent via-40% to-[#0a0a0a]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent via-40% to-[#141414]" />
           <div className="absolute bottom-6 left-6 sm:left-12">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a84c]">Family Owned &amp; Operated</span>
             <p className="text-white font-bold text-xl sm:text-2xl mt-1 drop-shadow">Bayou Office Machines</p>
@@ -346,7 +346,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           TOSHIBA PRODUCTS
       ═══════════════════════════════════════════════ */}
-      <Section id="products" className="py-24 bg-[#0d0d0d]">
+      <Section id="products" className="py-24 bg-[#111111]">
         <div className="max-w-7xl mx-auto px-6">
           <motion.p variants={fadeUp} className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a84c] mb-3">
             Authorized Toshiba Dealer
@@ -394,7 +394,7 @@ export default function Home() {
         </div>
       </Section>
 
-      <Section id="highlights" className="py-24 bg-[#0a0a0a]">
+      <Section id="highlights" className="py-24 bg-[#141414]">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between px-6 mb-8">
             <div>
@@ -462,7 +462,7 @@ export default function Home() {
       ═══════════════════════════════════════════════ */}
       <Section
         id="services"
-        className="py-24 px-6 bg-[#0a0a0a]"
+        className="py-24 px-6 bg-[#141414]"
       >
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -504,7 +504,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           PORTALS
       ═══════════════════════════════════════════════ */}
-      <Section id="portals" className="py-24 px-6 bg-[#0a0a0a]">
+      <Section id="portals" className="py-24 px-6 bg-[#141414]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <motion.p
@@ -558,7 +558,7 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           CONTACT
       ═══════════════════════════════════════════════ */}
-      <Section id="contact" className="py-24 px-6 bg-[#0a0a0a] border-t border-[#1f1f1f]">
+      <Section id="contact" className="py-24 px-6 bg-[#141414] border-t border-[#1f1f1f]">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             {/* Left — contact info + form */}
@@ -690,7 +690,7 @@ export default function Home() {
                 <div className="space-y-3 mb-6">
                   <button
                     onClick={() => setModalType("customer")}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg hover:border-[#800000]/40 transition-colors group"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-[#141414] border border-[#1f1f1f] rounded-lg hover:border-[#800000]/40 transition-colors group"
                   >
                     <span className="text-sm font-medium text-[#f5f5f5]">
                       Customer Login Help
