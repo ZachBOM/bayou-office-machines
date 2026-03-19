@@ -121,12 +121,12 @@ export default function AdminTimesheetsPage() {
     });
   }, [router, fetchData]);
 
-  function handleReset() {
+  async function handleReset() {
     const today = new Date().toISOString().split('T')[0];
     localStorage.setItem(PERIOD_KEY, today);
     setPeriodStart(today);
-    setStaff([]);
     setShowReset(false);
+    await fetchData(today);
   }
 
   if (loading) {
@@ -219,8 +219,8 @@ export default function AdminTimesheetsPage() {
 
           {staff.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-[#4b5563] text-sm">No time entries for this pay period.</p>
-              <p className="text-[#4b5563] text-xs mt-1">Period started: {periodStart}</p>
+              <p className="text-[#9ca3af] text-sm font-medium">Pay period reset — no entries yet.</p>
+              <p className="text-[#4b5563] text-xs mt-1">New period started: {new Date(periodStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
             </div>
           ) : (
             <div className="space-y-8">

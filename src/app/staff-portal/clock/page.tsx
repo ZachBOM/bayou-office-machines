@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
@@ -29,8 +29,10 @@ function deriveStatus(lastAction: Action | null): Status {
   return 'on_break';
 }
 
-export default function ClockPage() {
+function ClockPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPreview = searchParams.get('preview') === 'true';
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -95,7 +97,7 @@ export default function ClockPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col pt-16 pb-24">
-      {isAdmin && (
+      {isPreview && (
         <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
           <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as staff</p>
           <Link href="/staff-portal/dashboard" className="text-xs text-[#c9a84c] hover:underline font-medium">← Back to Dashboard</Link>
@@ -274,5 +276,13 @@ export default function ClockPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function ClockPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center"><p className="text-[#9ca3af] text-sm">Loading...</p></div>}>
+      <ClockPageInner />
+    </Suspense>
   );
 }

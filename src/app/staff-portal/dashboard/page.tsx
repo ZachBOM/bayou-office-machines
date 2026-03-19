@@ -246,10 +246,10 @@ export default function AdminDashboard() {
           <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-3">Preview As</p>
           <div className="flex gap-3">
             <Link
-              href="/staff-portal/clock"
+              href="/staff-portal/clock?preview=true"
               className="flex items-center gap-2 px-4 py-2.5 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 rounded-lg text-sm text-[#9ca3af] hover:text-[#f5f5f5] transition-colors"
             >
-              👷 Staff / Field Tech
+              👷 Staff / Field Tech (Preview)
             </Link>
             <Link
               href="/customer-portal/dashboard"
