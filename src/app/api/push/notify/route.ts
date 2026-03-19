@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import webpush from 'web-push';
 
-webpush.setVapidDetails(
-  'mailto:zach@bayouoffice.com',
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function POST(req: NextRequest) {
+  // Set VAPID details inside handler so env vars are available at runtime
+  webpush.setVapidDetails(
+    'mailto:zach@bayouoffice.com',
+    process.env.VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
   const body = await req.json();
   const { user_ids, title, message, url, role } = body;
 
