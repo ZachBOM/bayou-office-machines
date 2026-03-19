@@ -14,6 +14,7 @@ import {
   UserPlus,
   X,
   Clock,
+  Menu,
 } from 'lucide-react';
 
 function CreateAccountModal({ onClose }: { onClose: () => void }) {
@@ -127,6 +128,7 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -159,12 +161,14 @@ export default function AdminDashboard() {
 
       {/* Top bar */}
       <div className="border-b border-[#1f1f1f] bg-[#0d0d0d]">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a84c]">Admin</p>
-            <h1 className="text-xl font-bold text-[#f5f5f5]">Welcome back, {name}</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-[#f5f5f5]">Welcome back, {name}</h1>
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Desktop buttons */}
+          <div className="hidden sm:flex items-center gap-3">
             <Link
               href="/staff-portal/clock"
               className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] rounded-lg text-sm font-medium transition-colors"
@@ -190,7 +194,43 @@ export default function AdminDashboard() {
               Sign Out
             </button>
           </div>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMobileMenuOpen(p => !p)}
+            className="sm:hidden w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af]"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
+
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div className="sm:hidden border-t border-[#1f1f1f] px-4 py-3 space-y-2">
+            <button
+              onClick={() => { setShowCreate(true); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-[#800000] hover:bg-[#600000] text-white rounded-lg text-sm font-semibold transition-colors"
+            >
+              <UserPlus size={16} />
+              Create New Account
+            </button>
+            <Link
+              href="/staff-portal/clock"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 bg-[#111111] border border-[#1f1f1f] text-[#9ca3af] rounded-lg text-sm font-medium transition-colors"
+            >
+              <Clock size={16} />
+              Clock In/Out
+            </Link>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-3 px-4 py-3 bg-[#111111] border border-[#1f1f1f] text-[#9ca3af] rounded-lg text-sm font-medium transition-colors"
+            >
+              <LogOut size={16} />
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-10">
