@@ -73,7 +73,7 @@ function CreateAccountModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setForm(f => ({ ...f, role: e.target.value }))}
                 className="w-full bg-[#141414] border border-[#1f1f1f] rounded-lg px-4 py-3 text-[#f5f5f5] focus:outline-none focus:border-[#800000] text-sm"
               >
-                <option value="staff">Staff / Field Tech (clock in/out only)</option>
+                <option value="staff">Staff / Field Tech</option>
                 <option value="customer">Customer (customer portal access)</option>
                 <option value="admin">Admin (full access)</option>
               </select>
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
               className="flex items-center gap-2 px-4 py-2 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] rounded-lg text-sm font-medium transition-colors"
             >
               <Clock size={14} />
-              Clock In/Out
+              Staff Portal
             </Link>
             <button
               onClick={() => setShowArticle(true)}
@@ -416,7 +416,7 @@ export default function AdminDashboard() {
               className="flex items-center gap-3 px-4 py-3 bg-[#111111] border border-[#1f1f1f] text-[#9ca3af] rounded-lg text-sm font-medium transition-colors"
             >
               <Clock size={16} />
-              Clock In/Out
+              Staff Portal
             </Link>
             <button
               onClick={handleSignOut}
