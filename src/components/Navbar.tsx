@@ -108,6 +108,7 @@ export default function Navbar() {
                 height={40}
                 width={120}
                 className="object-contain h-10 w-auto"
+                style={{ filter: 'drop-shadow(-1px -1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(1px 1px 0 white)' }}
                 priority
               />
             </a>
