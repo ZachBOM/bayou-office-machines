@@ -5,11 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import Link from 'next/link';
-import { LogOut, Clock, Coffee, LogIn, FileText, Truck, SlidersHorizontal } from 'lucide-react';
+import Image from 'next/image';
+import { LogOut, Clock, Coffee, LogIn, FileText, Truck, SlidersHorizontal, ShieldCheck, ShieldOff, X } from 'lucide-react';
 
 type Action = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
 type Status = 'out' | 'in' | 'on_break';
 type Tab = 'clock' | 'dispatched' | 'settings';
+type MfaSetupStep = 'idle' | 'qr' | 'confirm' | 'done';
 
 const STATUS_LABELS: Record<Status, string> = {
   out: 'Clocked Out',
@@ -29,6 +31,186 @@ function deriveStatus(lastAction: Action | null): Status {
   return 'on_break';
 }
 
+function TwoFactorModal({ onClose }: { onClose: () => void }) {
+  const [setupStep, setSetupStep] = useState<MfaSetupStep>('idle');
+  const [enrolled, setEnrolled] = useState<boolean | null>(null);
+  const [factorId, setFactorId] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [secret, setSecret] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.mfa.listFactors().then(({ data }) => {
+      setEnrolled((data?.totp?.length ?? 0) > 0);
+      if (data?.totp?.[0]) setFactorId(data.totp[0].id);
+    });
+  }, []);
+
+  async function startEnroll() {
+    setLoading(true);
+    setError('');
+    const { data, error } = await supabase.auth.mfa.enroll({
+      factorType: 'totp',
+      issuer: 'Bayou Office Machines',
+      friendlyName: 'Authenticator App',
+    });
+    if (error || !data) {
+      setError(error?.message ?? 'Failed to start setup.');
+      setLoading(false);
+      return;
+    }
+    setFactorId(data.id);
+    setQrCode(data.totp.qr_code);
+    setSecret(data.totp.secret);
+    setSetupStep('qr');
+    setLoading(false);
+  }
+
+  async function confirmEnroll() {
+    if (code.length < 6) return;
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+    if (error) {
+      setError('Incorrect code. Try again.');
+      setLoading(false);
+      return;
+    }
+    setSetupStep('done');
+    setEnrolled(true);
+    setLoading(false);
+  }
+
+  async function unenroll() {
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.mfa.unenroll({ factorId });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+    setEnrolled(false);
+    setFactorId('');
+    setSetupStep('idle');
+    setLoading(false);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4 sm:pb-0">
+      <div className="w-full max-w-sm bg-[#111111] rounded-2xl border border-[#1f1f1f] overflow-hidden">
+        <div className="h-1 bg-[#800000]" />
+        <div className="flex items-center justify-between px-5 pt-5 pb-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck size={18} className="text-[#800000]" />
+            <h2 className="font-bold text-[#f5f5f5] text-sm">Two-Factor Authentication</h2>
+          </div>
+          <button onClick={onClose} className="text-[#4b5563] hover:text-[#9ca3af] p-1">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="px-5 pb-5">
+          {enrolled === null && (
+            <p className="text-[#4b5563] text-sm text-center py-4">Loading…</p>
+          )}
+
+          {/* Not enrolled */}
+          {enrolled === false && setupStep === 'idle' && (
+            <>
+              <p className="text-[#9ca3af] text-sm mb-4 leading-relaxed">
+                Add an extra layer of security. When you sign in, you&apos;ll be asked for a 6-digit code from your authenticator app.
+              </p>
+              <p className="text-xs text-[#4b5563] mb-4">Works with Google Authenticator, Authy, or any TOTP app.</p>
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+              <button
+                onClick={startEnroll}
+                disabled={loading}
+                className="w-full py-2.5 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {loading ? 'Setting up…' : 'Set Up 2FA'}
+              </button>
+            </>
+          )}
+
+          {/* QR code step */}
+          {setupStep === 'qr' && (
+            <>
+              <p className="text-[#9ca3af] text-xs mb-4 leading-relaxed">
+                Scan this QR code with your authenticator app, then enter the 6-digit code it shows.
+              </p>
+              <div className="flex justify-center mb-4">
+                <div className="bg-white p-3 rounded-xl">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrCode} alt="2FA QR code" width={160} height={160} />
+                </div>
+              </div>
+              <p className="text-xs text-[#4b5563] text-center mb-1">Can&apos;t scan? Enter this code manually:</p>
+              <p className="text-xs font-mono text-[#c9a84c] text-center break-all bg-[#141414] rounded-lg px-3 py-2 mb-4">{secret}</p>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-4 py-3 text-[#f5f5f5] text-center text-xl font-mono tracking-[0.4em] focus:outline-none focus:border-[#800000] mb-3"
+                autoFocus
+              />
+              {error && <p className="text-red-400 text-xs mb-3 text-center">{error}</p>}
+              <button
+                onClick={confirmEnroll}
+                disabled={loading || code.length < 6}
+                className="w-full py-2.5 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-colors"
+              >
+                {loading ? 'Verifying…' : 'Confirm & Enable'}
+              </button>
+            </>
+          )}
+
+          {/* Done */}
+          {setupStep === 'done' && (
+            <div className="text-center py-2">
+              <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-3">
+                <ShieldCheck size={22} className="text-green-400" />
+              </div>
+              <p className="font-semibold text-[#f5f5f5] mb-1">2FA Enabled!</p>
+              <p className="text-[#9ca3af] text-xs mb-4">You&apos;ll be asked for a code every time you sign in.</p>
+              <button onClick={onClose} className="w-full py-2.5 bg-[#800000] hover:bg-[#600000] text-white text-sm font-semibold rounded-xl transition-colors">
+                Done
+              </button>
+            </div>
+          )}
+
+          {/* Already enrolled */}
+          {enrolled === true && setupStep === 'idle' && (
+            <>
+              <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3 mb-4">
+                <ShieldCheck size={16} className="text-green-400 flex-shrink-0" />
+                <p className="text-green-400 text-sm font-medium">2FA is active on your account</p>
+              </div>
+              <p className="text-[#4b5563] text-xs mb-4 leading-relaxed">
+                Your account is protected. You&apos;ll be prompted for a code from your authenticator app each time you sign in.
+              </p>
+              {error && <p className="text-red-400 text-xs mb-3">{error}</p>}
+              <button
+                onClick={unenroll}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#111111] border border-red-900/30 hover:border-red-900/60 disabled:opacity-50 text-red-400 text-sm font-medium rounded-xl transition-colors"
+              >
+                <ShieldOff size={14} />
+                {loading ? 'Removing…' : 'Remove 2FA'}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClockPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,6 +222,7 @@ function ClockPageInner() {
   const [recentEntries, setRecentEntries] = useState<{ action: Action; created_at: string }[]>([]);
   const [now, setNow] = useState(new Date());
   const [tab, setTab] = useState<Tab>('clock');
+  const [showMfa, setShowMfa] = useState(false);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 1000);
@@ -102,6 +285,8 @@ function ClockPageInner() {
 
   return (
     <div className="min-h-screen bg-[#141414] flex flex-col pt-16 pb-24">
+      {showMfa && <TwoFactorModal onClose={() => setShowMfa(false)} />}
+
       {isPreview && (
         <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
           <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as staff</p>
@@ -127,7 +312,7 @@ function ClockPageInner() {
             <p className="text-[#4b5563] text-sm mt-1">{name}</p>
           </div>
 
-          {/* Action buttons — big */}
+          {/* Action buttons */}
           <div className="w-full max-w-sm space-y-4">
             {status === 'out' && (
               <button
@@ -187,7 +372,6 @@ function ClockPageInner() {
           {recentEntries.length > 0 && (
             <div className="w-full max-w-sm mt-10">
               <div className="rounded-2xl overflow-hidden border border-[#1f1f1f] shadow-lg">
-                {/* Calendar header */}
                 <div className="bg-[#800000] px-5 pt-4 pb-3 flex items-end justify-between">
                   <div>
                     <p className="text-[#f5c0c0] text-xs font-bold uppercase tracking-widest mb-0.5">
@@ -201,8 +385,6 @@ function ClockPageInner() {
                     {now.toLocaleDateString('en-US', { weekday: 'long' })}
                   </p>
                 </div>
-
-                {/* Timeline entries */}
                 <div className="bg-[#111111] px-5 py-4 space-y-0">
                   {[...recentEntries].reverse().map((entry, i, arr) => {
                     const dotColor =
@@ -218,12 +400,10 @@ function ClockPageInner() {
                     const isLast = i === arr.length - 1;
                     return (
                       <div key={i} className="flex items-stretch gap-4">
-                        {/* Timeline line + dot */}
                         <div className="flex flex-col items-center">
                           <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${dotColor}`} />
                           {!isLast && <div className="w-px flex-1 bg-[#2a2a2a] my-1" />}
                         </div>
-                        {/* Content */}
                         <div className={`flex items-center justify-between w-full ${!isLast ? 'pb-4' : ''}`}>
                           <span className="text-sm font-medium text-[#f5f5f5]">{label}</span>
                           <span className="text-xs text-[#4b5563] tabular-nums">
@@ -254,7 +434,7 @@ function ClockPageInner() {
         </div>
       )}
 
-      {/* More Settings Tab */}
+      {/* More / Settings Tab */}
       {tab === 'settings' && (
         <div className="flex-1 flex flex-col px-6 py-8">
           <h2 className="text-lg font-bold text-[#f5f5f5] mb-6">More</h2>
@@ -269,6 +449,18 @@ function ClockPageInner() {
               </div>
               <span className="text-[#4b5563] text-xs">→</span>
             </Link>
+
+            {/* 2FA setting */}
+            <button
+              onClick={() => setShowMfa(true)}
+              className="w-full flex items-center justify-between bg-[#111111] border border-[#1f1f1f] rounded-xl px-4 py-4 hover:border-[#800000]/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldCheck size={18} className="text-[#800000]" />
+                <span className="text-sm font-medium text-[#f5f5f5]">Two-Factor Auth</span>
+              </div>
+              <span className="text-[#4b5563] text-xs">→</span>
+            </button>
 
             {isAdmin && (
               <Link
