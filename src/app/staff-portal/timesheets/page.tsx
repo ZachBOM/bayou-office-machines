@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Printer, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Printer, ArrowLeft, RotateCcw, Calendar } from 'lucide-react';
 import Link from 'next/link';
 
 type Entry = { id: string; user_id: string; action: string; created_at: string };
@@ -42,6 +42,12 @@ function formatDuration(ms: number) {
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric',
+  });
+}
+
+function formatDisplayDate(dateStr: string) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
   });
 }
 
@@ -87,10 +93,13 @@ function getPeriodStart(): string {
   if (typeof window === 'undefined') return '';
   const saved = localStorage.getItem(PERIOD_KEY);
   if (saved) return saved;
-  // Default: 14 days ago
   const d = new Date();
   d.setDate(d.getDate() - 14);
   return d.toISOString().split('T')[0];
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
 }
 
 export default function AdminTimesheetsPage() {
@@ -98,13 +107,17 @@ export default function AdminTimesheetsPage() {
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [periodStart, setPeriodStart] = useState('');
+  const [periodEnd, setPeriodEnd] = useState(today());
   const [showReset, setShowReset] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [draftStart, setDraftStart] = useState('');
+  const [draftEnd, setDraftEnd] = useState(today());
 
-  const periodEnd = new Date().toISOString().split('T')[0];
-
-  const fetchData = useCallback(async (from: string) => {
-    const toISO = new Date().toISOString();
+  const fetchData = useCallback(async (from: string, to: string) => {
     const fromISO = new Date(from + 'T00:00:00').toISOString();
+    // Include the full end day through 23:59:59
+    const toDate = new Date(to + 'T23:59:59');
+    const toISO = toDate.toISOString();
     const res = await fetch(`/api/admin/timesheets?from=${fromISO}&to=${toISO}`);
     const data = await res.json();
     setStaff(data.users || []);
@@ -115,18 +128,35 @@ export default function AdminTimesheetsPage() {
       if (!session) { router.push('/staff-portal'); return; }
       if (session.user.user_metadata?.role !== 'admin') { router.push('/staff-portal'); return; }
       const start = getPeriodStart();
+      const end = today();
       setPeriodStart(start);
-      await fetchData(start);
+      setPeriodEnd(end);
+      setDraftStart(start);
+      setDraftEnd(end);
+      await fetchData(start, end);
       setLoading(false);
     });
   }, [router, fetchData]);
 
   async function handleReset() {
-    const today = new Date().toISOString().split('T')[0];
-    localStorage.setItem(PERIOD_KEY, today);
-    setPeriodStart(today);
+    const t = today();
+    localStorage.setItem(PERIOD_KEY, t);
+    setPeriodStart(t);
+    setPeriodEnd(t);
+    setDraftStart(t);
+    setDraftEnd(t);
     setShowReset(false);
-    await fetchData(today);
+    await fetchData(t, t);
+  }
+
+  function handleApplyDates() {
+    if (!draftStart || !draftEnd) return;
+    if (draftStart > draftEnd) return;
+    localStorage.setItem(PERIOD_KEY, draftStart);
+    setPeriodStart(draftStart);
+    setPeriodEnd(draftEnd);
+    setShowDatePicker(false);
+    fetchData(draftStart, draftEnd);
   }
 
   if (loading) {
@@ -164,6 +194,13 @@ export default function AdminTimesheetsPage() {
             </div>
             <div className="flex items-center gap-3">
               <button
+                onClick={() => { setDraftStart(periodStart); setDraftEnd(periodEnd); setShowDatePicker(true); }}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] text-sm font-medium rounded-lg transition-colors"
+              >
+                <Calendar size={14} />
+                Date Range
+              </button>
+              <button
                 onClick={() => setShowReset(true)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-[#111111] border border-[#1f1f1f] hover:border-[#800000]/40 text-[#9ca3af] hover:text-[#f5f5f5] text-sm font-medium rounded-lg transition-colors"
               >
@@ -179,6 +216,64 @@ export default function AdminTimesheetsPage() {
               </button>
             </div>
           </div>
+
+          {/* Date range picker modal */}
+          {showDatePicker && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 no-print">
+              <div className="w-full max-w-sm bg-[#111111] rounded-xl border border-[#1f1f1f] p-6">
+                <h3 className="font-bold text-[#f5f5f5] mb-1">Select Date Range</h3>
+                <p className="text-[#4b5563] text-xs mb-5">Choose the start and end dates to view.</p>
+
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-1.5">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={draftStart}
+                      max={draftEnd}
+                      onChange={e => setDraftStart(e.target.value)}
+                      className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#f5f5f5] text-sm focus:outline-none focus:border-[#800000]/60 [color-scheme:dark]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-1.5">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={draftEnd}
+                      min={draftStart}
+                      max={today()}
+                      onChange={e => setDraftEnd(e.target.value)}
+                      className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-[#f5f5f5] text-sm focus:outline-none focus:border-[#800000]/60 [color-scheme:dark]"
+                    />
+                  </div>
+                </div>
+
+                {draftStart > draftEnd && (
+                  <p className="text-xs text-red-400 mb-4">Start date must be before end date.</p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDatePicker(false)}
+                    className="flex-1 py-2.5 bg-[#111111] border border-[#1f1f1f] text-[#9ca3af] rounded-lg text-sm font-medium hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleApplyDates}
+                    disabled={!draftStart || !draftEnd || draftStart > draftEnd}
+                    className="flex-1 py-2.5 bg-[#800000] hover:bg-[#600000] disabled:opacity-40 text-white rounded-lg text-sm font-semibold transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Reset confirmation modal */}
           {showReset && (
@@ -211,16 +306,17 @@ export default function AdminTimesheetsPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a84c] mb-1 no-print">Time &amp; Attendance</p>
             <h1 className="text-2xl font-extrabold text-[#f5f5f5] print-white">Bayou Office Machines — Payroll Timesheet</h1>
             <p className="text-[#9ca3af] text-sm mt-1 print-white">
-              Pay period: <span className="text-[#f5f5f5] font-medium">{new Date(periodStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-              {' '}–{' '}
-              <span className="text-[#f5f5f5] font-medium">{new Date(periodEnd + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              {periodStart === periodEnd
+                ? <>Date: <span className="text-[#f5f5f5] font-medium">{formatDisplayDate(periodStart)}</span></>
+                : <>Period: <span className="text-[#f5f5f5] font-medium">{formatDisplayDate(periodStart)}</span>{' '}–{' '}<span className="text-[#f5f5f5] font-medium">{formatDisplayDate(periodEnd)}</span></>
+              }
             </p>
           </div>
 
           {staff.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-[#9ca3af] text-sm font-medium">Pay period reset — no entries yet.</p>
-              <p className="text-[#4b5563] text-xs mt-1">New period started: {new Date(periodStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+              <p className="text-[#9ca3af] text-sm font-medium">No entries found for this date range.</p>
+              <p className="text-[#4b5563] text-xs mt-1">{formatDisplayDate(periodStart)} – {formatDisplayDate(periodEnd)}</p>
             </div>
           ) : (
             <div className="space-y-8">
