@@ -112,12 +112,9 @@ export default function DispatchBoard() {
     if (query.length < 4) { setAddressSuggestions([]); setShowSuggestions(false); return; }
     setAddressLoading(true);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6&countrycodes=us`,
-        { headers: { 'Accept-Language': 'en' } }
-      );
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
       const data = await res.json();
-      const results = (data as { display_name: string }[]).map((r) => r.display_name);
+      const results: string[] = data.results ?? [];
       setAddressSuggestions(results);
       setShowSuggestions(results.length > 0);
     } catch {
@@ -264,13 +261,15 @@ export default function DispatchBoard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          customer_id: form.customer_id || null,
           dispatched_by: user!.id,
           dispatched_by_name: user!.user_metadata?.name ?? user!.email,
         }),
       });
-      if (!res.ok) throw new Error('Failed to create dispatch');
-      // Notify the tech
-      await fetch('/api/push/notify', {
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Failed to create dispatch');
+      // Notify the tech (best-effort — don't fail dispatch if push fails)
+      fetch('/api/push/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -279,12 +278,13 @@ export default function DispatchBoard() {
           message: `Job at ${form.customer_name}${form.address ? ' — ' + form.address : ''}`,
           url: '/staff-portal/clock',
         }),
-      });
+      }).catch(() => {});
       setShowNew(false);
       setForm({ tech_id: '', tech_name: '', customer_id: '', customer_name: '', address: '', transcript: '' });
+      setAddressSuggestions([]);
       await load();
-    } catch {
-      setFormError('Something went wrong. Try again.');
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
     }
     setSubmitting(false);
   }
