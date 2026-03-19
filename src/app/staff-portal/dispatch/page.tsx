@@ -122,21 +122,10 @@ export default function DispatchBoard() {
     setDispatches(dispData.dispatches ?? []);
     setCustomers(custData.customers ?? []);
 
-    // Load staff users for tech selector (admin only)
-    if (role === 'admin') {
-      const { data: users } = await supabase.auth.admin?.listUsers?.() ?? { data: null };
-      if (users) {
-        const staff = (users.users ?? [])
-          .filter((u: { user_metadata?: { role?: string } }) => ['admin', 'staff'].includes(u.user_metadata?.role ?? ''))
-          .map((u: { id: string; user_metadata?: { name?: string; role?: string }; email?: string }) => ({
-            id: u.id,
-            name: u.user_metadata?.name ?? u.email ?? u.id,
-            email: u.email ?? '',
-            role: u.user_metadata?.role ?? '',
-          }));
-        setStaffUsers(staff);
-      }
-    }
+    // Load staff users for tech selector
+    const staffRes = await fetch('/api/admin/staff-users');
+    const staffData = await staffRes.json();
+    setStaffUsers(staffData.users ?? []);
 
     setLoading(false);
   }, [filter, router]);
@@ -175,6 +164,20 @@ export default function DispatchBoard() {
       setShowNotifHelp(true);
     } else {
       setNotifStatus('idle');
+    }
+  }
+
+  async function unsubscribePush() {
+    try {
+      const sw = await navigator.serviceWorker.ready;
+      const sub = await sw.pushManager.getSubscription();
+      if (sub) await sub.unsubscribe();
+      if (user) await fetch(`/api/push/subscribe?user_id=${user.id}`, { method: 'DELETE' });
+      setNotifGranted(false);
+      setNotifStatus('idle');
+    } catch (err) {
+      setNotifError(err instanceof Error ? err.message : 'Failed to disable');
+      setNotifStatus('error');
     }
   }
 
@@ -328,7 +331,7 @@ export default function DispatchBoard() {
           <div className="flex items-center gap-2">
             {/* Notification bell */}
             <button
-              onClick={notifGranted ? undefined : requestNotifications}
+              onClick={notifStatus === 'granted' ? unsubscribePush : requestNotifications}
               title={
                 notifStatus === 'granted' ? 'Notifications enabled' :
                 notifStatus === 'denied' ? 'Blocked — click for help' :

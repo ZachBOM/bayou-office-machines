@@ -16,3 +16,12 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const user_id = searchParams.get('user_id');
+  if (!user_id) return NextResponse.json({ error: 'user_id required' }, { status: 400 });
+  const { error } = await supabaseAdmin.from('push_subscriptions').delete().eq('user_id', user_id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
