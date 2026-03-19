@@ -271,15 +271,16 @@ export default function Home() {
       ═══════════════════════════════════════════════ */}
       <Section id="about" className="bg-[#0a0a0a] overflow-hidden">
         {/* Photo banner */}
-        <div className="relative w-full h-72 sm:h-96">
+        <div className="relative w-full h-[420px] sm:h-[520px]">
           <Image
             src="/office-exterior.jpg"
             alt="Bayou Office Machines — our team"
             fill
-            className="object-cover object-top"
+            className="object-cover object-center"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-[#0a0a0a]" />
+          {/* Light top vignette + heavy fade at bottom into page */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent via-40% to-[#0a0a0a]" />
           <div className="absolute bottom-6 left-6 sm:left-12">
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c9a84c]">Family Owned &amp; Operated</span>
             <p className="text-white font-bold text-xl sm:text-2xl mt-1 drop-shadow">Bayou Office Machines</p>
