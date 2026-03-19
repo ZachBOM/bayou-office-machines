@@ -293,11 +293,11 @@ export default function DispatchBoard() {
             {/* Notification bell */}
             <button
               onClick={notifGranted ? undefined : requestNotifications}
-              title={notifGranted ? 'Notifications on' : 'Enable notifications'}
-              className={`p-2 rounded-lg border transition-colors ${
+              title={notifGranted ? 'Notifications enabled' : 'Enable notifications'}
+              className={`p-2 rounded-lg border transition-all ${
                 notifGranted
-                  ? 'border-green-500/30 text-green-400 bg-green-500/10'
-                  : 'border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af]'
+                  ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default'
+                  : 'border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af] hover:border-[#9ca3af]/40'
               }`}
             >
               {notifGranted ? <Bell size={16} /> : <BellOff size={16} />}

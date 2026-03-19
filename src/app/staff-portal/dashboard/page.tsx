@@ -460,7 +460,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DashSection title="Service Calls" description="View and manage incoming service calls, assign techs, and track status." badge="Coming Soon" />
           <DashSection title="Customer Accounts" description="Approve or deny customer portal sign-up requests and manage accounts." badge="Coming Soon" />
-          <DashSection title="CRM — Customer List" description="Browse all ~200 contract customers, their machines, and service history." badge="Coming Soon" />
+          <DashSection title="CRM — Customer List" description="Browse and manage all customers — name, phone, email, address, printer type, and status." badge="Open" href="/staff-portal/crm" buttonLabel="Open CRM →" />
           <DashSection title="Dispatch" description="Dispatch techs to jobs, track their location in real time, and monitor travel and on-site timers." badge="Open" href="/staff-portal/dispatch" buttonLabel="Open Dispatch Board →" />
           <DashSection title="Time & Attendance" description="View all staff timesheets, print payroll reports, and reset pay periods." badge="Open" href="/staff-portal/timesheets" />
           <DashSection title="Articles" description="Write and publish articles, tips, and news to the public website." badge="Open" href="/articles" buttonLabel="View Articles →" onAction={() => setShowArticle(true)} actionLabel="+ New Article" />

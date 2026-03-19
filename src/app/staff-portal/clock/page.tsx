@@ -330,9 +330,9 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
         {/* Notification setup */}
         <button
           onClick={notifGranted ? undefined : requestNotif}
-          className={`mt-6 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+          className={`mt-6 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
             notifGranted
-              ? 'border-green-500/30 text-green-400 bg-green-500/10 cursor-default'
+              ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default'
               : 'border-[#1f1f1f] text-[#9ca3af] hover:border-[#800000]/40'
           }`}
         >
