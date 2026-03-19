@@ -58,11 +58,16 @@ function ClockPageInner() {
   }, [router]);
 
   async function fetchEntries(uid: string) {
-    const res = await fetch(`/api/time?user_id=${uid}`);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const res = await fetch(`/api/time?user_id=${uid}&from=${todayStart.toISOString()}`);
     const data = await res.json();
     if (data.entries?.length) {
       setRecentEntries(data.entries);
       setLastAction(data.entries[0].action);
+    } else {
+      setRecentEntries([]);
+      setLastAction(null);
     }
   }
 

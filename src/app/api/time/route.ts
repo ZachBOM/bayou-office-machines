@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const user_id = searchParams.get('user_id');
+  const from = searchParams.get('from');
 
   const limit = parseInt(searchParams.get('limit') || '10');
 
@@ -32,6 +33,7 @@ export async function GET(req: NextRequest) {
     .limit(limit);
 
   if (user_id) query.eq('user_id', user_id);
+  if (from) query.gte('created_at', from);
 
   const { data, error } = await query;
 
