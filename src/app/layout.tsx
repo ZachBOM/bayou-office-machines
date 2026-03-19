@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PostHogProvider from "@/components/PostHogProvider";
 import PostHogPageView from "@/components/PostHogPageView";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { Suspense } from "react";
 
 const inter = Inter({
@@ -49,6 +50,7 @@ export default function RootLayout({
           <Navbar />
           <main>{children}</main>
           <Footer />
+          <PWAInstallBanner />
         </PostHogProvider>
       </body>
     </html>
