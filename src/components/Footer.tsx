@@ -37,13 +37,15 @@ export default function Footer() {
       >
         {/* Top — centered logo */}
         <div className="flex flex-col items-center py-12 border-b border-[#1f1f1f] px-6">
-          <Image
-            src="/logo.png"
-            alt="Bayou Office Machines"
-            width={160}
-            height={60}
-            className="object-contain h-16 w-auto mb-4"
-          />
+          <span className="bg-white rounded-2xl px-5 py-3 inline-flex items-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="Bayou Office Machines"
+              width={160}
+              height={60}
+              className="object-contain h-16 w-auto"
+            />
+          </span>
           <p className="text-[#9ca3af] text-sm text-center max-w-sm">
             South Louisiana&apos;s trusted office equipment partner since 1996.
             Authorized Toshiba &amp; Brother dealer.
