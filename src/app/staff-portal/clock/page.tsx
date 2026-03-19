@@ -182,19 +182,45 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
 
   const canUseDispatch = status === 'in';
 
+  const dispatchRef = useRef<Dispatch | null>(null);
+
   const fetchDispatch = useCallback(async () => {
     const res = await fetch(`/api/dispatch?tech_id=${user.id}&status=active`);
     const data = await res.json();
     const active = (data.dispatches ?? []).find((d: Dispatch) =>
       ['pending', 'en_route', 'on_site', 'awaiting_review'].includes(d.status)
     ) ?? null;
+    dispatchRef.current = active;
     setDispatch(active);
     setLoading(false);
   }, [user.id]);
 
   useEffect(() => { fetchDispatch(); }, [fetchDispatch]);
 
-  // Auto-stop tracking if status changes away from 'in'
+  // Auto-restore tracking after dispatch loads if user had it on
+  useEffect(() => {
+    if (!dispatch) return;
+    const saved = localStorage.getItem('bom_tracking_dispatch');
+    if (saved === dispatch.id && watchIdRef.current === null) {
+      startTrackingForDispatch(dispatch);
+    }
+  }, [dispatch?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Restart tracking when app comes back to foreground
+  useEffect(() => {
+    function onVisible() {
+      const d = dispatchRef.current;
+      if (!d) return;
+      const saved = localStorage.getItem('bom_tracking_dispatch');
+      if (saved === d.id && watchIdRef.current === null) {
+        startTrackingForDispatch(d);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-stop tracking if clocked out
   useEffect(() => {
     if (status !== 'in' && trackingOn) stopTracking();
   }, [status, trackingOn]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -250,25 +276,39 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
     }
   }
 
-  function startTracking() {
-    if (!navigator.geolocation || !dispatch) return;
-    const id = navigator.geolocation.watchPosition((pos) => {
-      const now = Date.now();
-      if (now - lastSentRef.current < 30000) return;
-      lastSentRef.current = now;
-      fetch('/api/dispatch/location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          dispatch_id: dispatch.id,
-          tech_id: user.id,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        }),
-      });
-    }, () => {}, { enableHighAccuracy: true });
+  function startTrackingForDispatch(d: Dispatch) {
+    if (!navigator.geolocation) return;
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    lastSentRef.current = 0;
+    const id = navigator.geolocation.watchPosition(
+      (pos) => {
+        const now = Date.now();
+        if (now - lastSentRef.current < 30000) return;
+        lastSentRef.current = now;
+        fetch('/api/dispatch/location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dispatch_id: d.id,
+            tech_id: user.id,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          }),
+        });
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+    );
     watchIdRef.current = id;
+    localStorage.setItem('bom_tracking_dispatch', d.id);
     setTrackingOn(true);
+  }
+
+  function startTracking() {
+    if (dispatch) startTrackingForDispatch(dispatch);
   }
 
   function stopTracking() {
@@ -276,11 +316,19 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
+    localStorage.removeItem('bom_tracking_dispatch');
     setTrackingOn(false);
   }
 
-  // Cleanup on unmount
-  useEffect(() => () => stopTracking(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Cleanup on unmount — only clear the watchPosition, keep localStorage so it restores on return
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
+    };
+  }, []);
 
   async function updateStatus(newStatus: DispatchStatus) {
     if (!dispatch) return;
@@ -309,7 +357,7 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
       });
     }
 
-    if (newStatus === 'awaiting_review') {
+    if (newStatus === 'awaiting_review' || newStatus === 'completed' || newStatus === 'cancelled') {
       stopTracking();
     } else if (newStatus === 'en_route') {
       startTracking();
