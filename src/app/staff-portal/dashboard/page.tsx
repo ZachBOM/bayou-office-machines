@@ -226,7 +226,7 @@ export default function AdminDashboard() {
           <DashSection title="Customer Accounts" description="Approve or deny customer portal sign-up requests and manage accounts." badge="Coming Soon" />
           <DashSection title="CRM — Customer List" description="Browse all ~200 contract customers, their machines, and service history." badge="Coming Soon" />
           <DashSection title="Dispatch Map" description="Live map showing all active tech locations during dispatched jobs." badge="Coming Soon" />
-          <DashSection title="Time & Attendance" description="View clock in/out records and hours worked for all staff members." badge="Coming Soon" href="/staff-portal/timesheet" />
+          <DashSection title="Time & Attendance" description="View all staff timesheets, print payroll reports, and reset pay periods." badge="Open" href="/staff-portal/timesheets" />
         </div>
       </div>
     </div>
