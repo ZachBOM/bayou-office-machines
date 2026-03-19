@@ -15,7 +15,7 @@ type Action = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
 type Status = 'out' | 'in' | 'on_break';
 type Tab = 'clock' | 'dispatched' | 'settings';
 type MfaSetupStep = 'idle' | 'qr' | 'confirm' | 'done';
-type DispatchStatus = 'pending' | 'en_route' | 'on_site' | 'completed' | 'cancelled';
+type DispatchStatus = 'pending' | 'en_route' | 'on_site' | 'awaiting_review' | 'completed' | 'cancelled';
 
 interface Dispatch {
   id: string;
@@ -186,7 +186,7 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
     const res = await fetch(`/api/dispatch?tech_id=${user.id}&status=active`);
     const data = await res.json();
     const active = (data.dispatches ?? []).find((d: Dispatch) =>
-      ['pending', 'en_route', 'on_site'].includes(d.status)
+      ['pending', 'en_route', 'on_site', 'awaiting_review'].includes(d.status)
     ) ?? null;
     setDispatch(active);
     setLoading(false);
@@ -291,10 +291,10 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
       body: JSON.stringify({ status: newStatus }),
     });
 
-    const messages: Partial<Record<DispatchStatus, string>> = {
-      en_route: `${user.user_metadata?.name ?? 'Tech'} is en route to ${dispatch.customer_name}`,
-      on_site:  `${user.user_metadata?.name ?? 'Tech'} arrived at ${dispatch.customer_name}`,
-      completed:`${user.user_metadata?.name ?? 'Tech'} completed job at ${dispatch.customer_name}`,
+    const messages: Partial<Record<DispatchStatus, { title: string; message: string }>> = {
+      en_route:        { title: 'Dispatch Update', message: `${user.user_metadata?.name ?? 'Tech'} is en route to ${dispatch.customer_name}` },
+      on_site:         { title: 'Dispatch Update', message: `${user.user_metadata?.name ?? 'Tech'} arrived at ${dispatch.customer_name}` },
+      awaiting_review: { title: '✅ Job Ready for Review', message: `${user.user_metadata?.name ?? 'Tech'} completed the job at ${dispatch.customer_name} — verify to close` },
     };
     if (messages[newStatus]) {
       await fetch('/api/push/notify', {
@@ -302,14 +302,14 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role: 'admin',
-          title: 'Dispatch Update',
-          message: messages[newStatus],
+          title: messages[newStatus]!.title,
+          message: messages[newStatus]!.message,
           url: '/staff-portal/dispatch',
         }),
       });
     }
 
-    if (newStatus === 'completed') {
+    if (newStatus === 'awaiting_review') {
       stopTracking();
     } else if (newStatus === 'en_route') {
       startTracking();
@@ -392,18 +392,20 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
   }
 
   const statusLabel: Record<DispatchStatus, string> = {
-    pending: 'Dispatched — Waiting to Start',
-    en_route: 'En Route',
-    on_site: 'On Site',
-    completed: 'Completed',
-    cancelled: 'Cancelled',
+    pending:         'Dispatched — Waiting to Start',
+    en_route:        'En Route',
+    on_site:         'On Site',
+    awaiting_review: 'Submitted — Awaiting Admin Approval',
+    completed:       'Completed',
+    cancelled:       'Cancelled',
   };
   const statusColor: Record<DispatchStatus, string> = {
-    pending:   'text-[#c9a84c]',
-    en_route:  'text-blue-400',
-    on_site:   'text-green-400',
-    completed: 'text-[#9ca3af]',
-    cancelled: 'text-red-400',
+    pending:         'text-[#c9a84c]',
+    en_route:        'text-blue-400',
+    on_site:         'text-green-400',
+    awaiting_review: 'text-purple-400',
+    completed:       'text-[#9ca3af]',
+    cancelled:       'text-red-400',
   };
 
   return (
@@ -507,13 +509,19 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
         )}
         {dispatch.status === 'on_site' && (
           <button
-            onClick={() => updateStatus('completed')}
+            onClick={() => updateStatus('awaiting_review')}
             disabled={updating}
             className="w-full py-4 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white font-bold text-lg rounded-2xl transition-colors flex items-center justify-center gap-3"
           >
             <CheckCircle size={22} />
-            Complete Job
+            Submit for Completion
           </button>
+        )}
+        {dispatch.status === 'awaiting_review' && (
+          <div className="w-full py-4 bg-purple-900/30 border border-purple-500/30 rounded-2xl flex items-center justify-center gap-3">
+            <CheckCircle size={20} className="text-purple-400" />
+            <span className="text-purple-300 font-semibold">Waiting for admin to verify</span>
+          </div>
         )}
       </div>
     </div>
@@ -566,7 +574,7 @@ function ClockPageInner() {
       const res = await fetch(`/api/dispatch?tech_id=${uid}&status=active`);
       const data = await res.json();
       setHasActiveDispatch((data.dispatches ?? []).some((d: Dispatch) =>
-        ['pending', 'en_route', 'on_site'].includes(d.status)
+        ['pending', 'en_route', 'on_site', 'awaiting_review'].includes(d.status)
       ));
     } catch {}
   }

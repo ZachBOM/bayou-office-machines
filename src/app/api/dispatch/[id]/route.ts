@@ -8,13 +8,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const updates: Record<string, unknown> = { status };
 
-  if (status === 'en_route') {
-    // travel timer starts (dispatched_at already set), just update status
-  } else if (status === 'on_site') {
+  if (status === 'on_site') {
     updates.arrived_at = new Date().toISOString();
   } else if (status === 'completed') {
     updates.completed_at = new Date().toISOString();
   }
+  // awaiting_review: tech submitted for approval, no completed_at yet
 
   const { data, error } = await supabaseAdmin
     .from('dispatches')

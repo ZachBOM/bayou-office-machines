@@ -11,7 +11,7 @@ import {
   RefreshCw, AlertCircle,
 } from 'lucide-react';
 
-type DispatchStatus = 'pending' | 'en_route' | 'on_site' | 'completed' | 'cancelled';
+type DispatchStatus = 'pending' | 'en_route' | 'on_site' | 'awaiting_review' | 'completed' | 'cancelled';
 
 interface Dispatch {
   id: string;
@@ -46,11 +46,12 @@ interface StaffUser {
 }
 
 const STATUS_CONFIG: Record<DispatchStatus, { label: string; color: string; dot: string }> = {
-  pending:   { label: 'Pending',   color: 'text-[#c9a84c] bg-[#c9a84c]/10 border-[#c9a84c]/30',   dot: 'bg-[#c9a84c]' },
-  en_route:  { label: 'En Route',  color: 'text-blue-400 bg-blue-400/10 border-blue-400/30',        dot: 'bg-blue-400' },
-  on_site:   { label: 'On Site',   color: 'text-green-400 bg-green-400/10 border-green-400/30',     dot: 'bg-green-400' },
-  completed: { label: 'Completed', color: 'text-[#9ca3af] bg-[#9ca3af]/10 border-[#9ca3af]/30',    dot: 'bg-[#9ca3af]' },
-  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-400/10 border-red-400/30',           dot: 'bg-red-400' },
+  pending:         { label: 'Pending',          color: 'text-[#c9a84c] bg-[#c9a84c]/10 border-[#c9a84c]/30',  dot: 'bg-[#c9a84c]' },
+  en_route:        { label: 'En Route',         color: 'text-blue-400 bg-blue-400/10 border-blue-400/30',     dot: 'bg-blue-400' },
+  on_site:         { label: 'On Site',          color: 'text-green-400 bg-green-400/10 border-green-400/30',  dot: 'bg-green-400' },
+  awaiting_review: { label: 'Awaiting Review',  color: 'text-purple-400 bg-purple-400/10 border-purple-400/30', dot: 'bg-purple-400 animate-pulse' },
+  completed:       { label: 'Completed',        color: 'text-[#9ca3af] bg-[#9ca3af]/10 border-[#9ca3af]/30', dot: 'bg-[#9ca3af]' },
+  cancelled:       { label: 'Cancelled',        color: 'text-red-400 bg-red-400/10 border-red-400/30',       dot: 'bg-red-400' },
 };
 
 function elapsedStr(from: string | null, to: string | null = null): string {
@@ -293,8 +294,8 @@ export default function DispatchBoard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_ids: [form.tech_id],
-          title: '🚚 New Dispatch',
-          message: `Job at ${form.customer_name}${form.address ? ' — ' + form.address : ''}`,
+          title: '🚚 You\'ve Been Dispatched',
+          message: `Job at ${form.customer_name}${form.address ? ' — ' + form.address : ''}. Open the app to start your route.`,
           url: '/staff-portal/clock',
         }),
       }).catch(() => {});
@@ -355,7 +356,7 @@ export default function DispatchBoard() {
     await load();
   }
 
-  const activeCount = dispatches.filter((d) => ['pending', 'en_route', 'on_site'].includes(d.status)).length;
+  const activeCount = dispatches.filter((d) => ['pending', 'en_route', 'on_site', 'awaiting_review'].includes(d.status)).length;
   void now; // used in timer rendering via direct Date.now() calls
 
   if (loading) {
@@ -487,7 +488,7 @@ export default function DispatchBoard() {
             {dispatches.map((d) => {
               const cfg = STATUS_CONFIG[d.status];
               const isExpanded = expandedId === d.id;
-              const isActive = ['pending', 'en_route', 'on_site'].includes(d.status);
+              const isActive = ['pending', 'en_route', 'on_site', 'awaiting_review'].includes(d.status);
               const travelMs = d.arrived_at
                 ? new Date(d.arrived_at).getTime() - new Date(d.dispatched_at).getTime()
                 : d.status === 'en_route' ? Date.now() - new Date(d.dispatched_at).getTime() : null;
@@ -606,26 +607,40 @@ export default function DispatchBoard() {
 
                         {/* Admin status controls */}
                         {isActive && (
-                          <div className="flex flex-wrap gap-2 pt-1">
-                            {d.status === 'pending' && (
-                              <button onClick={() => updateStatus(d.id, 'en_route')} className="px-3 py-1.5 text-xs font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors">
-                                Mark En Route
-                              </button>
+                          <div className="space-y-2">
+                            {d.status === 'awaiting_review' && (
+                              <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl px-3 py-2.5">
+                                <p className="text-xs font-semibold text-purple-400 mb-0.5">Tech marked this job complete</p>
+                                <p className="text-xs text-[#9ca3af]">Review the job and verify to close it out.</p>
+                              </div>
                             )}
-                            {d.status === 'en_route' && (
-                              <button onClick={() => updateStatus(d.id, 'on_site')} className="px-3 py-1.5 text-xs font-semibold bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors">
-                                Mark Arrived
+                            <div className="flex flex-wrap gap-2">
+                              {d.status === 'pending' && (
+                                <button onClick={() => updateStatus(d.id, 'en_route')} className="px-3 py-1.5 text-xs font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors">
+                                  Mark En Route
+                                </button>
+                              )}
+                              {d.status === 'en_route' && (
+                                <button onClick={() => updateStatus(d.id, 'on_site')} className="px-3 py-1.5 text-xs font-semibold bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors">
+                                  Mark Arrived
+                                </button>
+                              )}
+                              {d.status === 'on_site' && (
+                                <button onClick={() => updateStatus(d.id, 'completed')} className="px-3 py-1.5 text-xs font-semibold bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[#c9a84c] rounded-lg hover:bg-[#c9a84c]/20 transition-colors">
+                                  <CheckCircle size={12} className="inline mr-1" />
+                                  Mark Complete
+                                </button>
+                              )}
+                              {d.status === 'awaiting_review' && (
+                                <button onClick={() => updateStatus(d.id, 'completed')} className="px-3 py-1.5 text-xs font-semibold bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors flex items-center gap-1">
+                                  <CheckCircle size={12} />
+                                  Verify &amp; Complete
+                                </button>
+                              )}
+                              <button onClick={() => updateStatus(d.id, 'cancelled')} className="px-3 py-1.5 text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors">
+                                Cancel
                               </button>
-                            )}
-                            {d.status === 'on_site' && (
-                              <button onClick={() => updateStatus(d.id, 'completed')} className="px-3 py-1.5 text-xs font-semibold bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[#c9a84c] rounded-lg hover:bg-[#c9a84c]/20 transition-colors">
-                                <CheckCircle size={12} className="inline mr-1" />
-                                Mark Complete
-                              </button>
-                            )}
-                            <button onClick={() => updateStatus(d.id, 'cancelled')} className="px-3 py-1.5 text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors">
-                              Cancel
-                            </button>
+                            </div>
                           </div>
                         )}
 
