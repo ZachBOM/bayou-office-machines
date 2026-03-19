@@ -13,7 +13,7 @@
 
 /* Light mode — swap backgrounds/text, keep maroon */
 html.light body { background: #f0f0f0 !important; color: #111111 !important; }
-html.light .bg-\[\#0a0a0a\] { background-color: #f0f0f0 !important; }
+html.light .bg-\[\#141414\] { background-color: #f0f0f0 !important; }
 html.light .bg-\[\#0d0d0d\] { background-color: #e8e8e8 !important; }
 html.light .bg-\[\#111111\] { background-color: #e0e0e0 !important; }
 html.light .border-\[\#1f1f1f\] { border-color: #cccccc !important; }

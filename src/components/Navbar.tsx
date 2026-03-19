@@ -102,15 +102,16 @@ export default function Navbar() {
               onClick={(e) => handleNavClick(e, "/#hero")}
               className="flex items-center gap-2 flex-shrink-0"
             >
-              <Image
-                src="/logo.png"
-                alt="Bayou Office Machines"
-                height={40}
-                width={120}
-                className="object-contain h-10 w-auto"
-                style={{ filter: 'drop-shadow(-1px -1px 0 white) drop-shadow(1px -1px 0 white) drop-shadow(-1px 1px 0 white) drop-shadow(1px 1px 0 white)' }}
-                priority
-              />
+              <span className={!lightMode ? "bg-white rounded-xl px-3 py-1 inline-flex items-center" : ""}>
+                <Image
+                  src="/logo.png"
+                  alt="Bayou Office Machines"
+                  height={40}
+                  width={120}
+                  className="object-contain h-10 w-auto"
+                  priority
+                />
+              </span>
             </a>
 
             {/* Center nav links — desktop */}
@@ -195,13 +196,13 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden bg-[#141414] border-t border-[#1f1f1f] px-4 py-4 space-y-1">
+          <div className="md:hidden bg-zinc-900 border-t border-zinc-800 px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleNavClick(e, link.href)}
-                className="block px-4 py-3 text-sm font-medium text-[#f5f5f5] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                className="block px-4 py-3 text-sm font-medium text-white hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               >
                 {link.label}
               </a>
@@ -210,7 +211,7 @@ export default function Navbar() {
             {/* Light mode toggle in mobile */}
             <button
               onClick={toggleLightMode}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#9ca3af] hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             >
               {lightMode ? <Moon size={16} /> : <Sun size={16} />}
               {lightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
@@ -221,7 +222,7 @@ export default function Navbar() {
                 <Link
                   href={dashboardHref}
                   onClick={() => setMobileOpen(false)}
-                  className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
+                  className="w-full px-4 py-3 text-sm font-semibold !text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
                 >
                   {dashboardLabel}
                 </Link>
@@ -230,14 +231,14 @@ export default function Navbar() {
                   <Link
                     href="/customer-portal"
                     onClick={() => setMobileOpen(false)}
-                    className="w-full px-4 py-3 text-sm font-semibold text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors text-center block"
+                    className="w-full px-4 py-3 text-sm font-semibold !text-white border border-[#800000] rounded-lg hover:bg-[#800000]/20 transition-colors text-center block"
                   >
                     Customer Login
                   </Link>
                   <Link
                     href="/staff-portal"
                     onClick={() => setMobileOpen(false)}
-                    className="w-full px-4 py-3 text-sm font-semibold text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
+                    className="w-full px-4 py-3 text-sm font-semibold !text-white bg-[#800000] rounded-lg hover:bg-[#600000] transition-colors text-center block"
                   >
                     Staff Login
                   </Link>
