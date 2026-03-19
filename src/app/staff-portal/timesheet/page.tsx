@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import { Printer, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 type Entry = { id: string; action: string; created_at: string };
@@ -136,13 +136,6 @@ export default function TimesheetPage() {
               <ArrowLeft size={16} />
               Back
             </Link>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#800000] hover:bg-[#600000] text-white text-sm font-semibold rounded-lg transition-colors"
-            >
-              <Printer size={16} />
-              Print Timesheet
-            </button>
           </div>
 
           {/* Print header (visible on print) */}

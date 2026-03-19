@@ -576,7 +576,7 @@ export default function DispatchBoard() {
                           </a>
                         )}
 
-                        {/* Live tech location */}
+                        {/* Live tech location + map */}
                         {(() => {
                           const loc = locations[d.id];
                           if (!loc) return isActive ? (
@@ -586,21 +586,38 @@ export default function DispatchBoard() {
                           ) : null;
                           const age = Math.floor((Date.now() - new Date(loc.created_at).getTime()) / 60000);
                           const ageLabel = age < 1 ? 'just now' : `${age}m ago`;
+                          const delta = 0.008;
+                          const bbox = `${loc.lng - delta},${loc.lat - delta},${loc.lng + delta},${loc.lat + delta}`;
+                          const mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${loc.lat},${loc.lng}`;
                           return (
-                            <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                                <span className="text-xs font-medium text-blue-400">Live Location</span>
-                                <span className="text-xs text-[#4b5563]">· updated {ageLabel}</span>
+                            <div className="space-y-2">
+                              {/* Status bar */}
+                              <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2.5">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                                  <span className="text-xs font-medium text-blue-400">Live Location</span>
+                                  <span className="text-xs text-[#4b5563]">· updated {ageLabel}</span>
+                                </div>
+                                <a
+                                  href={`https://maps.google.com/?q=${loc.lat},${loc.lng}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                  <Navigation size={12} /> Open in Maps
+                                </a>
                               </div>
-                              <a
-                                href={`https://maps.google.com/?q=${loc.lat},${loc.lng}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-                              >
-                                <Navigation size={12} /> Track
-                              </a>
+                              {/* Embedded map */}
+                              <div className="rounded-xl overflow-hidden border border-[#2a2a2a]">
+                                <iframe
+                                  key={`${loc.lat},${loc.lng}`}
+                                  src={mapSrc}
+                                  width="100%"
+                                  height="220"
+                                  style={{ border: 'none', display: 'block' }}
+                                  title="Tech location"
+                                />
+                              </div>
                             </div>
                           );
                         })()}
