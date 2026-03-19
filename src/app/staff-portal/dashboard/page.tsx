@@ -12,7 +12,6 @@ import {
   ClipboardList,
   LogOut,
   Bell,
-  UserPlus,
   X,
   Clock,
   Menu,
@@ -307,7 +306,6 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
   const [showArticle, setShowArticle] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -338,7 +336,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#141414] pt-16">
-      {showCreate && <CreateAccountModal onClose={() => setShowCreate(false)} />}
       {showArticle && <NewArticleModal onClose={() => setShowArticle(false)} />}
 
       {/* Top bar */}
@@ -365,13 +362,13 @@ export default function AdminDashboard() {
               <Newspaper size={14} />
               New Article
             </button>
-            <button
-              onClick={() => setShowCreate(true)}
+            <Link
+              href="/staff-portal/accounts"
               className="flex items-center gap-2 px-4 py-2 bg-[#800000] hover:bg-[#600000] text-white rounded-lg text-sm font-medium transition-colors"
             >
-              <UserPlus size={14} />
-              New Account
-            </button>
+              <Users size={14} />
+              Manage Accounts
+            </Link>
             <button className="w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af] hover:text-[#f5f5f5] hover:border-[#800000]/40 transition-colors">
               <Bell size={16} />
             </button>
@@ -396,13 +393,14 @@ export default function AdminDashboard() {
         {/* Mobile dropdown menu */}
         {mobileMenuOpen && (
           <div className="sm:hidden border-t border-[#1f1f1f] px-4 py-3 space-y-2">
-            <button
-              onClick={() => { setShowCreate(true); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-3 bg-[#800000] hover:bg-[#600000] text-white rounded-lg text-sm font-semibold transition-colors"
+            <Link
+              href="/staff-portal/accounts"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 bg-[#800000] hover:bg-[#600000] text-white rounded-lg text-sm font-semibold transition-colors"
             >
-              <UserPlus size={16} />
-              Create New Account
-            </button>
+              <Users size={16} />
+              Manage Accounts
+            </Link>
             <button
               onClick={() => { setShowArticle(true); setMobileMenuOpen(false); }}
               className="w-full flex items-center gap-3 px-4 py-3 bg-[#111111] border border-[#1f1f1f] text-[#9ca3af] rounded-lg text-sm font-medium transition-colors"
@@ -459,7 +457,7 @@ export default function AdminDashboard() {
         {/* Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DashSection title="Service Calls" description="View and manage incoming service calls, assign techs, and track status." badge="Coming Soon" />
-          <DashSection title="Customer Accounts" description="Approve or deny customer portal sign-up requests and manage accounts." badge="Coming Soon" />
+          <DashSection title="Account Management" description="Create, edit, and delete staff and customer accounts." badge="Open" href="/staff-portal/accounts" buttonLabel="Manage Accounts →" />
           <DashSection title="CRM — Customer List" description="Browse and manage all customers — name, phone, email, address, printer type, and status." badge="Open" href="/staff-portal/crm" buttonLabel="Open CRM →" />
           <DashSection title="Dispatch" description="Dispatch techs to jobs, track their location in real time, and monitor travel and on-site timers." badge="Open" href="/staff-portal/dispatch" buttonLabel="Open Dispatch Board →" />
           <DashSection title="Time & Attendance" description="View all staff timesheets, print payroll reports, and reset pay periods." badge="Open" href="/staff-portal/timesheets" />

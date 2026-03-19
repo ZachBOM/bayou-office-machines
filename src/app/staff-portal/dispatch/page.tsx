@@ -97,12 +97,55 @@ export default function DispatchBoard() {
   const [formError, setFormError] = useState('');
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   // Live clock for timers
   useEffect(() => {
     tickRef.current = setInterval(() => setNow(new Date()), 10000);
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, []);
+
+  // Load Google Maps Places script once
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey || document.getElementById('gm-places-script')) return;
+    const script = document.createElement('script');
+    script.id = 'gm-places-script';
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // Init autocomplete when modal opens
+  useEffect(() => {
+    if (!showNew) return;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return;
+
+    function initAC() {
+      if (!addressInputRef.current || !window.google?.maps?.places) return;
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+        types: ['address'],
+        componentRestrictions: { country: 'us' },
+        fields: ['formatted_address'],
+      });
+      autocompleteRef.current.addListener('place_changed', () => {
+        const place = autocompleteRef.current!.getPlace();
+        if (place.formatted_address) {
+          setForm(f => ({ ...f, address: place.formatted_address! }));
+        }
+      });
+    }
+
+    if (window.google?.maps?.places) {
+      initAC();
+    } else {
+      const script = document.getElementById('gm-places-script');
+      if (script) script.addEventListener('load', initAC);
+      return () => { script?.removeEventListener('load', initAC); };
+    }
+  }, [showNew]);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession();
@@ -655,14 +698,30 @@ export default function DispatchBoard() {
 
               {/* Address */}
               <div>
-                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">Address</label>
+                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">
+                  Address
+                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
+                    <span className="ml-1.5 text-[#4b5563] font-normal normal-case">— start typing for autocomplete</span>
+                  )}
+                </label>
                 <input
+                  ref={addressInputRef}
                   type="text"
                   value={form.address}
                   onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
                   placeholder="123 Main St, Larose, LA"
                   className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000]"
                 />
+                {form.address && (
+                  <a
+                    href={`https://maps.google.com/?q=${encodeURIComponent(form.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  >
+                    <MapPin size={11} /> Preview in Google Maps
+                  </a>
+                )}
               </div>
 
               {/* Transcript */}
