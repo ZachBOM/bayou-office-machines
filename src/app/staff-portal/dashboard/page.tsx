@@ -11,7 +11,6 @@ import {
   ClipboardList,
   LogOut,
   Bell,
-  Settings,
   UserPlus,
   X,
   Clock,
@@ -182,9 +181,6 @@ export default function AdminDashboard() {
             </button>
             <button className="w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af] hover:text-[#f5f5f5] hover:border-[#800000]/40 transition-colors">
               <Bell size={16} />
-            </button>
-            <button className="w-9 h-9 rounded-lg bg-[#111111] border border-[#1f1f1f] flex items-center justify-center text-[#9ca3af] hover:text-[#f5f5f5] hover:border-[#800000]/40 transition-colors">
-              <Settings size={16} />
             </button>
             <button
               onClick={handleSignOut}
