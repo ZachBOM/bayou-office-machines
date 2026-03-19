@@ -183,19 +183,57 @@ function ClockPageInner() {
             )}
           </div>
 
-          {/* Recent activity */}
+          {/* Today's Activity — calendar card */}
           {recentEntries.length > 0 && (
             <div className="w-full max-w-sm mt-10">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#4b5563] mb-3">Today&apos;s Activity</p>
-              <div className="space-y-2">
-                {recentEntries.slice(0, 5).map((entry, i) => (
-                  <div key={i} className="flex items-center justify-between bg-[#111111] border border-[#1f1f1f] rounded-xl px-4 py-3">
-                    <span className="text-sm text-[#f5f5f5] capitalize">{entry.action.replace('_', ' ')}</span>
-                    <span className="text-xs text-[#4b5563]">
-                      {new Date(entry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+              <div className="rounded-2xl overflow-hidden border border-[#1f1f1f] shadow-lg">
+                {/* Calendar header */}
+                <div className="bg-[#800000] px-5 pt-4 pb-3 flex items-end justify-between">
+                  <div>
+                    <p className="text-[#f5c0c0] text-xs font-bold uppercase tracking-widest mb-0.5">
+                      {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </p>
+                    <p className="text-white text-6xl font-extrabold leading-none tabular-nums">
+                      {now.getDate()}
+                    </p>
                   </div>
-                ))}
+                  <p className="text-[#f5c0c0] text-sm font-semibold pb-1">
+                    {now.toLocaleDateString('en-US', { weekday: 'long' })}
+                  </p>
+                </div>
+
+                {/* Timeline entries */}
+                <div className="bg-[#111111] px-5 py-4 space-y-0">
+                  {[...recentEntries].reverse().map((entry, i, arr) => {
+                    const dotColor =
+                      entry.action === 'clock_in' ? 'bg-green-500' :
+                      entry.action === 'clock_out' ? 'bg-[#800000]' :
+                      entry.action === 'break_start' ? 'bg-yellow-500' :
+                      'bg-blue-400';
+                    const label =
+                      entry.action === 'clock_in' ? 'Clock In' :
+                      entry.action === 'clock_out' ? 'Clock Out' :
+                      entry.action === 'break_start' ? 'Break Start' :
+                      'Break End';
+                    const isLast = i === arr.length - 1;
+                    return (
+                      <div key={i} className="flex items-stretch gap-4">
+                        {/* Timeline line + dot */}
+                        <div className="flex flex-col items-center">
+                          <div className={`w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0 ${dotColor}`} />
+                          {!isLast && <div className="w-px flex-1 bg-[#2a2a2a] my-1" />}
+                        </div>
+                        {/* Content */}
+                        <div className={`flex items-center justify-between w-full ${!isLast ? 'pb-4' : ''}`}>
+                          <span className="text-sm font-medium text-[#f5f5f5]">{label}</span>
+                          <span className="text-xs text-[#4b5563] tabular-nums">
+                            {new Date(entry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}
