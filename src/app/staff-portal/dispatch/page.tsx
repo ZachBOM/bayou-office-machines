@@ -97,9 +97,10 @@ export default function DispatchBoard() {
   const [formError, setFormError] = useState('');
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const addressInputRef = useRef<HTMLInputElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const autocompleteRef = useRef<any>(null);
+  const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Live clock for timers
   useEffect(() => {
@@ -107,49 +108,36 @@ export default function DispatchBoard() {
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
   }, []);
 
-  // Load Google Maps Places script once
-  useEffect(() => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || document.getElementById('gm-places-script')) return;
-    const script = document.createElement('script');
-    script.id = 'gm-places-script';
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    document.head.appendChild(script);
-  }, []);
-
-  // Init autocomplete when modal opens
-  useEffect(() => {
-    if (!showNew) return;
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return;
-
-    function initAC() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const g = (window as any).google;
-      if (!addressInputRef.current || !g?.maps?.places) return;
-      autocompleteRef.current = new g.maps.places.Autocomplete(addressInputRef.current, {
-        types: ['address'],
-        componentRestrictions: { country: 'us' },
-        fields: ['formatted_address'],
-      });
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current.getPlace();
-        if (place.formatted_address) {
-          setForm(f => ({ ...f, address: place.formatted_address }));
-        }
-      });
+  async function searchAddress(query: string) {
+    if (query.length < 4) { setAddressSuggestions([]); setShowSuggestions(false); return; }
+    setAddressLoading(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6&countrycodes=us`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await res.json();
+      const results = (data as { display_name: string }[]).map((r) => r.display_name);
+      setAddressSuggestions(results);
+      setShowSuggestions(results.length > 0);
+    } catch {
+      setAddressSuggestions([]);
+    } finally {
+      setAddressLoading(false);
     }
+  }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps?.places) {
-      initAC();
-    } else {
-      const script = document.getElementById('gm-places-script');
-      if (script) script.addEventListener('load', initAC);
-      return () => { script?.removeEventListener('load', initAC); };
-    }
-  }, [showNew]);
+  function handleAddressChange(value: string) {
+    setForm(f => ({ ...f, address: value }));
+    if (addressDebounceRef.current) clearTimeout(addressDebounceRef.current);
+    addressDebounceRef.current = setTimeout(() => searchAddress(value), 350);
+  }
+
+  function pickSuggestion(suggestion: string) {
+    setForm(f => ({ ...f, address: suggestion }));
+    setShowSuggestions(false);
+    setAddressSuggestions([]);
+  }
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession();
@@ -701,21 +689,36 @@ export default function DispatchBoard() {
               )}
 
               {/* Address */}
-              <div>
-                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">
-                  Address
-                  {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
-                    <span className="ml-1.5 text-[#4b5563] font-normal normal-case">— start typing for autocomplete</span>
-                  )}
-                </label>
+              <div className="relative">
+                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">Address</label>
                 <input
-                  ref={addressInputRef}
                   type="text"
                   value={form.address}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                  onChange={(e) => handleAddressChange(e.target.value)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onFocus={() => { if (addressSuggestions.length > 0) setShowSuggestions(true); }}
                   placeholder="123 Main St, Larose, LA"
+                  autoComplete="off"
                   className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000]"
                 />
+                {addressLoading && (
+                  <div className="absolute right-3 top-[2.1rem] w-3 h-3 border border-[#4b5563] border-t-[#c9a84c] rounded-full animate-spin" />
+                )}
+                {showSuggestions && addressSuggestions.length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl overflow-hidden shadow-xl">
+                    {addressSuggestions.map((s, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onMouseDown={() => pickSuggestion(s)}
+                        className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left hover:bg-[#800000]/20 transition-colors border-b border-[#2a2a2a] last:border-0"
+                      >
+                        <MapPin size={12} className="text-[#800000] flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-[#f5f5f5] leading-relaxed">{s}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {form.address && (
                   <a
                     href={`https://maps.google.com/?q=${encodeURIComponent(form.address)}`}
