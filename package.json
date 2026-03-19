@@ -10,13 +10,15 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.2",
+    "@types/web-push": "^3.6.4",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
     "next": "16.1.7",
     "posthog-js": "^1.362.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "resend": "^6.9.4"
+    "resend": "^6.9.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -1,0 +1,633 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import type { User } from '@supabase/supabase-js';
+import Link from 'next/link';
+import {
+  Truck, Plus, X, ArrowLeft, MapPin, Clock, User as UserIcon,
+  Phone, FileText, CheckCircle, Navigation, Bell, BellOff,
+  RefreshCw, AlertCircle,
+} from 'lucide-react';
+
+type DispatchStatus = 'pending' | 'en_route' | 'on_site' | 'completed' | 'cancelled';
+
+interface Dispatch {
+  id: string;
+  created_at: string;
+  dispatched_at: string;
+  arrived_at: string | null;
+  completed_at: string | null;
+  tech_id: string;
+  tech_name: string;
+  customer_id: string | null;
+  customer_name: string;
+  address: string;
+  transcript: string;
+  status: DispatchStatus;
+  dispatched_by: string;
+  dispatched_by_name: string;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  company: string;
+  phone: string;
+  address: string;
+}
+
+interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+const STATUS_CONFIG: Record<DispatchStatus, { label: string; color: string; dot: string }> = {
+  pending:   { label: 'Pending',   color: 'text-[#c9a84c] bg-[#c9a84c]/10 border-[#c9a84c]/30',   dot: 'bg-[#c9a84c]' },
+  en_route:  { label: 'En Route',  color: 'text-blue-400 bg-blue-400/10 border-blue-400/30',        dot: 'bg-blue-400' },
+  on_site:   { label: 'On Site',   color: 'text-green-400 bg-green-400/10 border-green-400/30',     dot: 'bg-green-400' },
+  completed: { label: 'Completed', color: 'text-[#9ca3af] bg-[#9ca3af]/10 border-[#9ca3af]/30',    dot: 'bg-[#9ca3af]' },
+  cancelled: { label: 'Cancelled', color: 'text-red-400 bg-red-400/10 border-red-400/30',           dot: 'bg-red-400' },
+};
+
+function elapsedStr(from: string | null, to: string | null = null): string {
+  if (!from) return '—';
+  const start = new Date(from).getTime();
+  const end = to ? new Date(to).getTime() : Date.now();
+  const mins = Math.floor((end - start) / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function mapsLink(address: string) {
+  return `https://maps.google.com/?q=${encodeURIComponent(address)}`;
+}
+
+export default function DispatchBoard() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [dispatches, setDispatches] = useState<Dispatch[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'active' | 'all'>('active');
+  const [showNew, setShowNew] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [notifGranted, setNotifGranted] = useState(false);
+  const [now, setNow] = useState(new Date());
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+  // New dispatch form
+  const [form, setForm] = useState({
+    tech_id: '', tech_name: '',
+    customer_id: '', customer_name: '', address: '',
+    transcript: '',
+  });
+  const [newCustomer, setNewCustomer] = useState({ name: '', company: '', phone: '', address: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Live clock for timers
+  useEffect(() => {
+    tickRef.current = setInterval(() => setNow(new Date()), 10000);
+    return () => { if (tickRef.current) clearInterval(tickRef.current); };
+  }, []);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) { router.push('/staff-portal'); return; }
+    const u = data.session.user;
+    const role = u.user_metadata?.role;
+    if (role !== 'admin' && role !== 'staff') { router.push('/staff-portal'); return; }
+    setUser(u);
+
+    // Load dispatches
+    const [dispRes, custRes] = await Promise.all([
+      fetch(`/api/dispatch?status=${filter}`),
+      fetch('/api/customers'),
+    ]);
+    const dispData = await dispRes.json();
+    const custData = await custRes.json();
+    setDispatches(dispData.dispatches ?? []);
+    setCustomers(custData.customers ?? []);
+
+    // Load staff users for tech selector (admin only)
+    if (role === 'admin') {
+      const { data: users } = await supabase.auth.admin?.listUsers?.() ?? { data: null };
+      if (users) {
+        const staff = (users.users ?? [])
+          .filter((u: { user_metadata?: { role?: string } }) => ['admin', 'staff'].includes(u.user_metadata?.role ?? ''))
+          .map((u: { id: string; user_metadata?: { name?: string; role?: string }; email?: string }) => ({
+            id: u.id,
+            name: u.user_metadata?.name ?? u.email ?? u.id,
+            email: u.email ?? '',
+            role: u.user_metadata?.role ?? '',
+          }));
+        setStaffUsers(staff);
+      }
+    }
+
+    setLoading(false);
+  }, [filter, router]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Check notification permission
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') {
+      setNotifGranted(Notification.permission === 'granted');
+    }
+  }, []);
+
+  async function requestNotifications() {
+    if (!('Notification' in window)) return;
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      setNotifGranted(true);
+      await subscribePush();
+    }
+  }
+
+  async function subscribePush() {
+    if (!vapidKey || !user) return;
+    try {
+      const sw = await navigator.serviceWorker.ready;
+      const sub = await sw.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          subscription: sub.toJSON(),
+          role: user.user_metadata?.role,
+        }),
+      });
+    } catch {}
+  }
+
+  async function handleNewDispatch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.tech_id || !form.customer_name) {
+      setFormError('Select a tech and enter a customer name.');
+      return;
+    }
+    setSubmitting(true);
+    setFormError('');
+    try {
+      const res = await fetch('/api/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          dispatched_by: user!.id,
+          dispatched_by_name: user!.user_metadata?.name ?? user!.email,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create dispatch');
+      // Notify the tech
+      await fetch('/api/push/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_ids: [form.tech_id],
+          title: '🚚 New Dispatch',
+          message: `Job at ${form.customer_name}${form.address ? ' — ' + form.address : ''}`,
+          url: '/staff-portal/clock',
+        }),
+      });
+      setShowNew(false);
+      setForm({ tech_id: '', tech_name: '', customer_id: '', customer_name: '', address: '', transcript: '' });
+      await load();
+    } catch {
+      setFormError('Something went wrong. Try again.');
+    }
+    setSubmitting(false);
+  }
+
+  async function addCustomer(e: React.FormEvent) {
+    e.preventDefault();
+    const res = await fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCustomer),
+    });
+    const data = await res.json();
+    if (data.customer) {
+      setCustomers((prev) => [...prev, data.customer]);
+      setForm((f) => ({ ...f, customer_id: data.customer.id, customer_name: data.customer.name, address: data.customer.address || '' }));
+      setShowCustomerForm(false);
+      setNewCustomer({ name: '', company: '', phone: '', address: '' });
+    }
+  }
+
+  async function updateStatus(id: string, status: DispatchStatus) {
+    await fetch(`/api/dispatch/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+
+    // Notify admin on status changes
+    const dispatch = dispatches.find((d) => d.id === id);
+    if (dispatch && user) {
+      const messages: Partial<Record<DispatchStatus, string>> = {
+        en_route:  `${dispatch.tech_name} is en route to ${dispatch.customer_name}`,
+        on_site:   `${dispatch.tech_name} has arrived at ${dispatch.customer_name}`,
+        completed: `${dispatch.tech_name} completed job at ${dispatch.customer_name}`,
+      };
+      if (messages[status]) {
+        await fetch('/api/push/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            role: 'admin',
+            title: 'Dispatch Update',
+            message: messages[status],
+            url: '/staff-portal/dispatch',
+          }),
+        });
+      }
+    }
+    await load();
+  }
+
+  const activeCount = dispatches.filter((d) => ['pending', 'en_route', 'on_site'].includes(d.status)).length;
+  void now; // used in timer rendering via direct Date.now() calls
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#141414] flex items-center justify-center pt-16">
+        <p className="text-[#9ca3af] text-sm">Loading dispatch board…</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#141414] pt-16">
+      {/* Header */}
+      <div className="border-b border-[#1f1f1f] bg-[#111111]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link href="/staff-portal/dashboard" className="text-[#4b5563] hover:text-[#9ca3af] transition-colors">
+              <ArrowLeft size={20} />
+            </Link>
+            <div>
+              <h1 className="text-lg font-bold text-[#f5f5f5]">Dispatch Board</h1>
+              <p className="text-xs text-[#4b5563]">
+                {activeCount} active dispatch{activeCount !== 1 ? 'es' : ''}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Notification bell */}
+            <button
+              onClick={notifGranted ? undefined : requestNotifications}
+              title={notifGranted ? 'Notifications on' : 'Enable notifications'}
+              className={`p-2 rounded-lg border transition-colors ${
+                notifGranted
+                  ? 'border-green-500/30 text-green-400 bg-green-500/10'
+                  : 'border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af]'
+              }`}
+            >
+              {notifGranted ? <Bell size={16} /> : <BellOff size={16} />}
+            </button>
+            <button
+              onClick={load}
+              className="p-2 rounded-lg border border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af] transition-colors"
+            >
+              <RefreshCw size={16} />
+            </button>
+            <button
+              onClick={() => setShowNew(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-[#800000] hover:bg-[#600000] text-white text-sm font-semibold rounded-lg transition-colors"
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">New Dispatch</span>
+              <span className="sm:hidden">Dispatch</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        {/* Filter tabs */}
+        <div className="flex gap-1 mb-6 bg-[#111111] border border-[#1f1f1f] rounded-xl p-1 w-fit">
+          {(['active', 'all'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors capitalize ${
+                filter === f ? 'bg-[#800000] text-white' : 'text-[#4b5563] hover:text-[#9ca3af]'
+              }`}
+            >
+              {f === 'active' ? `Active${activeCount > 0 ? ` (${activeCount})` : ''}` : 'All'}
+            </button>
+          ))}
+        </div>
+
+        {/* No notification warning */}
+        {!notifGranted && (
+          <div className="flex items-start gap-3 bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-xl px-4 py-3 mb-6">
+            <AlertCircle size={16} className="text-[#c9a84c] flex-shrink-0 mt-0.5" />
+            <p className="text-[#c9a84c] text-sm">
+              Enable notifications to be alerted when techs update their dispatch status.{' '}
+              <button onClick={requestNotifications} className="underline font-semibold">Enable now</button>
+            </p>
+          </div>
+        )}
+
+        {/* Dispatch list */}
+        {dispatches.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="w-16 h-16 rounded-2xl bg-[#111111] border border-[#1f1f1f] flex items-center justify-center mx-auto mb-4">
+              <Truck size={28} className="text-[#800000]" />
+            </div>
+            <p className="text-[#f5f5f5] font-semibold mb-1">No dispatches</p>
+            <p className="text-[#4b5563] text-sm">Create one to get started.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {dispatches.map((d) => {
+              const cfg = STATUS_CONFIG[d.status];
+              const isExpanded = expandedId === d.id;
+              const isActive = ['pending', 'en_route', 'on_site'].includes(d.status);
+              const travelMs = d.arrived_at
+                ? new Date(d.arrived_at).getTime() - new Date(d.dispatched_at).getTime()
+                : d.status === 'en_route' ? Date.now() - new Date(d.dispatched_at).getTime() : null;
+              const onSiteMs = d.completed_at
+                ? new Date(d.completed_at).getTime() - new Date(d.arrived_at!).getTime()
+                : d.status === 'on_site' && d.arrived_at ? Date.now() - new Date(d.arrived_at).getTime() : null;
+
+              return (
+                <div key={d.id} className={`bg-[#111111] border rounded-2xl overflow-hidden transition-all ${isActive ? 'border-[#1f1f1f]' : 'border-[#1a1a1a] opacity-75'}`}>
+                  {/* Status bar */}
+                  <div className={`h-1 ${cfg.dot}`} />
+
+                  <div className="p-4">
+                    {/* Top row */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${cfg.color}`}>
+                            {cfg.label}
+                          </span>
+                          <span className="text-xs text-[#4b5563]">
+                            {new Date(d.dispatched_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <UserIcon size={14} className="text-[#800000] flex-shrink-0" />
+                          <span className="text-sm font-bold text-[#f5f5f5]">{d.tech_name || 'Unknown Tech'}</span>
+                        </div>
+                        <div className="flex items-start gap-2 mt-1">
+                          <MapPin size={14} className="text-[#800000] flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-[#9ca3af]">{d.customer_name}{d.address ? ` — ${d.address}` : ''}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : d.id)}
+                        className="text-[#4b5563] hover:text-[#9ca3af] p-1 flex-shrink-0"
+                      >
+                        {isExpanded ? <X size={16} /> : <FileText size={16} />}
+                      </button>
+                    </div>
+
+                    {/* Timers row */}
+                    <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[#1a1a1a]">
+                      <div className="flex items-center gap-1.5">
+                        <Navigation size={12} className="text-blue-400" />
+                        <span className="text-xs text-[#4b5563]">Travel:</span>
+                        <span className="text-xs font-mono text-[#f5f5f5]">
+                          {travelMs != null ? `${Math.floor(travelMs / 60000)}m` : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={12} className="text-green-400" />
+                        <span className="text-xs text-[#4b5563]">On-site:</span>
+                        <span className="text-xs font-mono text-[#f5f5f5]">
+                          {onSiteMs != null ? `${Math.floor(onSiteMs / 60000)}m` : '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Clock size={12} className="text-[#c9a84c]" />
+                        <span className="text-xs text-[#4b5563]">Total:</span>
+                        <span className="text-xs font-mono text-[#f5f5f5]">{elapsedStr(d.dispatched_at, d.completed_at)}</span>
+                      </div>
+                    </div>
+
+                    {/* Expanded details */}
+                    {isExpanded && (
+                      <div className="mt-4 space-y-3">
+                        {d.transcript && (
+                          <div className="bg-[#141414] rounded-xl p-3 border border-[#1f1f1f]">
+                            <p className="text-xs font-semibold text-[#c9a84c] uppercase tracking-widest mb-1.5">Transcript / Notes</p>
+                            <p className="text-sm text-[#9ca3af] leading-relaxed whitespace-pre-wrap">{d.transcript}</p>
+                          </div>
+                        )}
+
+                        {d.address && (
+                          <a
+                            href={mapsLink(d.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                            <MapPin size={14} />
+                            Open in Google Maps
+                          </a>
+                        )}
+
+                        {/* Admin status controls */}
+                        {isActive && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {d.status === 'pending' && (
+                              <button onClick={() => updateStatus(d.id, 'en_route')} className="px-3 py-1.5 text-xs font-semibold bg-blue-500/10 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/20 transition-colors">
+                                Mark En Route
+                              </button>
+                            )}
+                            {d.status === 'en_route' && (
+                              <button onClick={() => updateStatus(d.id, 'on_site')} className="px-3 py-1.5 text-xs font-semibold bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg hover:bg-green-500/20 transition-colors">
+                                Mark Arrived
+                              </button>
+                            )}
+                            {d.status === 'on_site' && (
+                              <button onClick={() => updateStatus(d.id, 'completed')} className="px-3 py-1.5 text-xs font-semibold bg-[#c9a84c]/10 border border-[#c9a84c]/30 text-[#c9a84c] rounded-lg hover:bg-[#c9a84c]/20 transition-colors">
+                                <CheckCircle size={12} className="inline mr-1" />
+                                Mark Complete
+                              </button>
+                            )}
+                            <button onClick={() => updateStatus(d.id, 'cancelled')} className="px-3 py-1.5 text-xs font-semibold bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors">
+                              Cancel
+                            </button>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-[#4b5563]">Dispatched by {d.dispatched_by_name}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── New Dispatch Modal ─────────────────────────────────────── */}
+      {showNew && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4 sm:pb-0">
+          <div className="w-full max-w-md bg-[#111111] rounded-2xl border border-[#1f1f1f] overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="h-1 bg-[#800000]" />
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Truck size={18} className="text-[#800000]" />
+                <h2 className="font-bold text-[#f5f5f5]">New Dispatch</h2>
+              </div>
+              <button onClick={() => setShowNew(false)} className="text-[#4b5563] hover:text-[#9ca3af] p-1"><X size={16} /></button>
+            </div>
+
+            <form onSubmit={handleNewDispatch} className="px-5 pb-5 overflow-y-auto space-y-4">
+              {/* Tech selector */}
+              <div>
+                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">Service Tech</label>
+                <select
+                  value={form.tech_id}
+                  onChange={(e) => {
+                    const opt = e.target.options[e.target.selectedIndex];
+                    setForm((f) => ({ ...f, tech_id: e.target.value, tech_name: opt.text }));
+                  }}
+                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-[#800000]"
+                  required
+                >
+                  <option value="">Select tech…</option>
+                  {staffUsers.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Customer selector */}
+              {!showCustomerForm ? (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-semibold text-[#f5f5f5]">Customer</label>
+                    <button type="button" onClick={() => setShowCustomerForm(true)} className="text-xs text-[#800000] hover:text-[#a00000] font-medium flex items-center gap-1">
+                      <Plus size={12} /> Add New
+                    </button>
+                  </div>
+                  <select
+                    value={form.customer_id}
+                    onChange={(e) => {
+                      const cust = customers.find((c) => c.id === e.target.value);
+                      setForm((f) => ({
+                        ...f,
+                        customer_id: e.target.value,
+                        customer_name: cust?.name ?? '',
+                        address: cust?.address ?? '',
+                      }));
+                    }}
+                    className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] focus:outline-none focus:border-[#800000]"
+                  >
+                    <option value="">Select customer (or type below)…</option>
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}{c.company ? ` — ${c.company}` : ''}</option>
+                    ))}
+                  </select>
+                  {/* Freeform if not in list */}
+                  <input
+                    type="text"
+                    placeholder="Or type customer name…"
+                    value={form.customer_name}
+                    onChange={(e) => setForm((f) => ({ ...f, customer_name: e.target.value, customer_id: '' }))}
+                    className="mt-2 w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000]"
+                  />
+                </div>
+              ) : (
+                <div className="bg-[#141414] rounded-xl border border-[#1f1f1f] p-3 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-semibold text-[#c9a84c]">Add New Customer</p>
+                    <button type="button" onClick={() => setShowCustomerForm(false)} className="text-[#4b5563] hover:text-[#9ca3af]"><X size={14} /></button>
+                  </div>
+                  {(['name', 'company', 'phone', 'address'] as const).map((field) => (
+                    <input
+                      key={field}
+                      type="text"
+                      placeholder={field.charAt(0).toUpperCase() + field.slice(1) + (field === 'name' ? ' *' : '')}
+                      value={newCustomer[field]}
+                      onChange={(e) => setNewCustomer((n) => ({ ...n, [field]: e.target.value }))}
+                      className="w-full bg-[#111111] border border-[#1f1f1f] rounded-lg px-3 py-2 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000]"
+                    />
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addCustomer}
+                    disabled={!newCustomer.name}
+                    className="w-full py-2 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Save Customer
+                  </button>
+                </div>
+              )}
+
+              {/* Address */}
+              <div>
+                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">Address</label>
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                  placeholder="123 Main St, Larose, LA"
+                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000]"
+                />
+              </div>
+
+              {/* Transcript */}
+              <div>
+                <label className="block text-xs font-semibold text-[#f5f5f5] mb-1.5">
+                  <span className="flex items-center gap-1.5"><Phone size={12} className="text-[#800000]" /> Call / Email Transcript</span>
+                </label>
+                <textarea
+                  value={form.transcript}
+                  onChange={(e) => setForm((f) => ({ ...f, transcript: e.target.value }))}
+                  placeholder="Paste or type the call summary or email content here…"
+                  rows={4}
+                  className="w-full bg-[#141414] border border-[#1f1f1f] rounded-xl px-3 py-2.5 text-sm text-[#f5f5f5] placeholder-[#4b5563] focus:outline-none focus:border-[#800000] resize-none"
+                />
+              </div>
+
+              {formError && <p className="text-red-400 text-xs">{formError}</p>}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-3 bg-[#800000] hover:bg-[#600000] disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                <Truck size={16} />
+                {submitting ? 'Dispatching…' : 'Dispatch Now'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}

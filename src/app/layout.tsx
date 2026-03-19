@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import PostHogProvider from "@/components/PostHogProvider";
 import PostHogPageView from "@/components/PostHogPageView";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { Suspense } from "react";
 
 const inter = Inter({
@@ -51,6 +52,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
           <PWAInstallBanner />
+          <ServiceWorkerRegister />
         </PostHogProvider>
       </body>
     </html>
