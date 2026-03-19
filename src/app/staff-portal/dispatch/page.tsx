@@ -84,6 +84,7 @@ export default function DispatchBoard() {
   const [notifError, setNotifError] = useState('');
   const [showNotifHelp, setShowNotifHelp] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [locations, setLocations] = useState<Record<string, { lat: number; lng: number; created_at: string }>>({});
   const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   // New dispatch form
@@ -97,6 +98,7 @@ export default function DispatchBoard() {
   const [formError, setFormError] = useState('');
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const locPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [addressLoading, setAddressLoading] = useState(false);
@@ -106,6 +108,23 @@ export default function DispatchBoard() {
   useEffect(() => {
     tickRef.current = setInterval(() => setNow(new Date()), 10000);
     return () => { if (tickRef.current) clearInterval(tickRef.current); };
+  }, []);
+
+  // Poll tech locations every 30s
+  async function fetchLocations() {
+    const res = await fetch('/api/dispatch/location');
+    const data = await res.json();
+    const map: Record<string, { lat: number; lng: number; created_at: string }> = {};
+    for (const loc of data.locations ?? []) {
+      map[loc.dispatch_id] = { lat: loc.lat, lng: loc.lng, created_at: loc.created_at };
+    }
+    setLocations(map);
+  }
+
+  useEffect(() => {
+    fetchLocations();
+    locPollRef.current = setInterval(fetchLocations, 30000);
+    return () => { if (locPollRef.current) clearInterval(locPollRef.current); };
   }, []);
 
   async function searchAddress(query: string) {
@@ -552,9 +571,38 @@ export default function DispatchBoard() {
                             className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
                           >
                             <MapPin size={14} />
-                            Open in Google Maps
+                            Open Job Address in Maps
                           </a>
                         )}
+
+                        {/* Live tech location */}
+                        {(() => {
+                          const loc = locations[d.id];
+                          if (!loc) return isActive ? (
+                            <p className="text-xs text-[#4b5563] flex items-center gap-1.5">
+                              <Navigation size={11} /> Waiting for tech to share location…
+                            </p>
+                          ) : null;
+                          const age = Math.floor((Date.now() - new Date(loc.created_at).getTime()) / 60000);
+                          const ageLabel = age < 1 ? 'just now' : `${age}m ago`;
+                          return (
+                            <div className="flex items-center justify-between bg-blue-500/10 border border-blue-500/20 rounded-xl px-3 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                                <span className="text-xs font-medium text-blue-400">Live Location</span>
+                                <span className="text-xs text-[#4b5563]">· updated {ageLabel}</span>
+                              </div>
+                              <a
+                                href={`https://maps.google.com/?q=${loc.lat},${loc.lng}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                              >
+                                <Navigation size={12} /> Track
+                              </a>
+                            </div>
+                          );
+                        })()}
 
                         {/* Admin status controls */}
                         {isActive && (
