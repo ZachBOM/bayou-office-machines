@@ -1,4 +1,1 @@
-// Minimal type shim so TypeScript accepts window.google.maps in dispatch page
-interface Window {
-  google: typeof google;
-}
+// Placeholder — Google Maps types loaded at runtime via script tag

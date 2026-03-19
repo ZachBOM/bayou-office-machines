@@ -98,7 +98,8 @@ export default function DispatchBoard() {
 
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const addressInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const autocompleteRef = useRef<any>(null);
 
   // Live clock for timers
   useEffect(() => {
@@ -124,21 +125,24 @@ export default function DispatchBoard() {
     if (!apiKey) return;
 
     function initAC() {
-      if (!addressInputRef.current || !window.google?.maps?.places) return;
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const g = (window as any).google;
+      if (!addressInputRef.current || !g?.maps?.places) return;
+      autocompleteRef.current = new g.maps.places.Autocomplete(addressInputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' },
         fields: ['formatted_address'],
       });
       autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current!.getPlace();
+        const place = autocompleteRef.current.getPlace();
         if (place.formatted_address) {
-          setForm(f => ({ ...f, address: place.formatted_address! }));
+          setForm(f => ({ ...f, address: place.formatted_address }));
         }
       });
     }
 
-    if (window.google?.maps?.places) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).google?.maps?.places) {
       initAC();
     } else {
       const script = document.getElementById('gm-places-script');
