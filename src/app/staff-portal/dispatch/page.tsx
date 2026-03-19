@@ -80,6 +80,9 @@ export default function DispatchBoard() {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notifGranted, setNotifGranted] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'error'>('idle');
+  const [notifError, setNotifError] = useState('');
+  const [showNotifHelp, setShowNotifHelp] = useState(false);
   const [now, setNow] = useState(new Date());
   const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -140,31 +143,59 @@ export default function DispatchBoard() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Check notification permission
+  // Check notification permission on mount
   useEffect(() => {
     if (typeof Notification !== 'undefined') {
-      setNotifGranted(Notification.permission === 'granted');
+      const perm = Notification.permission;
+      setNotifGranted(perm === 'granted');
+      setNotifStatus(perm === 'granted' ? 'granted' : perm === 'denied' ? 'denied' : 'idle');
     }
   }, []);
 
   async function requestNotifications() {
-    if (!('Notification' in window)) return;
+    if (!('Notification' in window)) {
+      setNotifError('Your browser does not support notifications.');
+      setNotifStatus('error');
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      setNotifStatus('denied');
+      setShowNotifHelp(true);
+      return;
+    }
+    setNotifStatus('requesting');
+    setNotifError('');
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       setNotifGranted(true);
+      setNotifStatus('granted');
       await subscribePush();
+    } else if (perm === 'denied') {
+      setNotifStatus('denied');
+      setShowNotifHelp(true);
+    } else {
+      setNotifStatus('idle');
     }
   }
 
   async function subscribePush() {
-    if (!vapidKey || !user) return;
+    if (!user) return;
+    if (!vapidKey) {
+      setNotifError('Push key not configured. Contact admin.');
+      setNotifStatus('error');
+      return;
+    }
     try {
-      const sw = await navigator.serviceWorker.ready;
-      const sub = await sw.pushManager.subscribe({
+      if (!('serviceWorker' in navigator)) throw new Error('Service workers not supported');
+      const sw = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+      ]);
+      const sub = await (sw as ServiceWorkerRegistration).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       });
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -173,7 +204,12 @@ export default function DispatchBoard() {
           role: user.user_metadata?.role,
         }),
       });
-    } catch {}
+      if (!res.ok) throw new Error('Failed to save subscription');
+    } catch (err) {
+      setNotifError(`Subscription failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setNotifStatus('error');
+      setNotifGranted(false);
+    }
   }
 
   async function handleNewDispatch(e: React.FormEvent) {
@@ -293,14 +329,21 @@ export default function DispatchBoard() {
             {/* Notification bell */}
             <button
               onClick={notifGranted ? undefined : requestNotifications}
-              title={notifGranted ? 'Notifications enabled' : 'Enable notifications'}
+              title={
+                notifStatus === 'granted' ? 'Notifications enabled' :
+                notifStatus === 'denied' ? 'Blocked — click for help' :
+                notifStatus === 'requesting' ? 'Requesting…' :
+                'Enable notifications'
+              }
               className={`p-2 rounded-lg border transition-all ${
-                notifGranted
-                  ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default'
-                  : 'border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af] hover:border-[#9ca3af]/40'
+                notifStatus === 'granted' ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default' :
+                notifStatus === 'denied' ? 'border-red-500/40 text-red-400 bg-red-500/10 hover:bg-red-500/20' :
+                notifStatus === 'error' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10 hover:bg-orange-500/20' :
+                notifStatus === 'requesting' ? 'border-[#c9a84c]/40 text-[#c9a84c] animate-pulse cursor-wait' :
+                'border-[#1f1f1f] text-[#4b5563] hover:text-[#9ca3af] hover:border-[#9ca3af]/40'
               }`}
             >
-              {notifGranted ? <Bell size={16} /> : <BellOff size={16} />}
+              {notifStatus === 'granted' ? <Bell size={16} /> : <BellOff size={16} />}
             </button>
             <button
               onClick={load}
@@ -336,8 +379,34 @@ export default function DispatchBoard() {
           ))}
         </div>
 
-        {/* No notification warning */}
-        {!notifGranted && (
+        {/* Notification status banners */}
+        {notifStatus === 'error' && notifError && (
+          <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 mb-6">
+            <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-red-400 text-sm">{notifError}</p>
+          </div>
+        )}
+
+        {(notifStatus === 'denied' || showNotifHelp) && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-4 mb-6 space-y-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-red-400 text-sm font-semibold">Notifications blocked by your browser</p>
+              </div>
+              <button onClick={() => setShowNotifHelp(false)} className="text-[#4b5563] hover:text-[#9ca3af]"><X size={14} /></button>
+            </div>
+            <p className="text-sm text-[#9ca3af] leading-relaxed">To enable notifications for this site:</p>
+            <ol className="text-sm text-[#9ca3af] space-y-1.5 list-decimal list-inside leading-relaxed">
+              <li>Click the <strong className="text-[#f5f5f5]">lock icon 🔒</strong> in your browser address bar</li>
+              <li>Find <strong className="text-[#f5f5f5]">Notifications</strong> and set it to <strong className="text-[#f5f5f5]">Allow</strong></li>
+              <li>Refresh this page</li>
+            </ol>
+            <p className="text-xs text-[#4b5563]">On Windows you may also need: Settings → System → Notifications → allow your browser.</p>
+          </div>
+        )}
+
+        {notifStatus === 'idle' && (
           <div className="flex items-start gap-3 bg-[#c9a84c]/10 border border-[#c9a84c]/30 rounded-xl px-4 py-3 mb-6">
             <AlertCircle size={16} className="text-[#c9a84c] flex-shrink-0 mt-0.5" />
             <p className="text-[#c9a84c] text-sm">

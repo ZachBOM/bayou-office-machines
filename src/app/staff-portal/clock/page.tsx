@@ -161,6 +161,9 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
   const [loading, setLoading] = useState(true);
   const [trackingOn, setTrackingOn] = useState(false);
   const [notifGranted, setNotifGranted] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied' | 'error'>('idle');
+  const [notifError, setNotifError] = useState('');
+  const [showNotifHelp, setShowNotifHelp] = useState(false);
   const [updating, setUpdating] = useState(false);
   const watchIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<number>(0);
@@ -198,31 +201,53 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
 
   // Notification permission check
   useEffect(() => {
-    if (typeof Notification !== 'undefined') setNotifGranted(Notification.permission === 'granted');
+    if (typeof Notification !== 'undefined') {
+      const perm = Notification.permission;
+      setNotifGranted(perm === 'granted');
+      setNotifStatus(perm === 'granted' ? 'granted' : perm === 'denied' ? 'denied' : 'idle');
+    }
   }, []);
 
   async function requestNotif() {
+    if (!('Notification' in window)) { setNotifError('Notifications not supported in this browser.'); setNotifStatus('error'); return; }
+    if (Notification.permission === 'denied') { setNotifStatus('denied'); setShowNotifHelp(true); return; }
+    setNotifStatus('requesting');
     const perm = await Notification.requestPermission();
     if (perm === 'granted') {
       setNotifGranted(true);
+      setNotifStatus('granted');
       await subscribePush();
+    } else if (perm === 'denied') {
+      setNotifStatus('denied');
+      setShowNotifHelp(true);
+    } else {
+      setNotifStatus('idle');
     }
   }
 
   async function subscribePush() {
-    if (!vapidKey) return;
+    if (!vapidKey) { setNotifError('Push key not configured.'); setNotifStatus('error'); return; }
     try {
-      const sw = await navigator.serviceWorker.ready;
-      const sub = await sw.pushManager.subscribe({
+      if (!('serviceWorker' in navigator)) throw new Error('Service workers not supported');
+      const sw = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('SW timeout')), 5000)),
+      ]);
+      const sub = await (sw as ServiceWorkerRegistration).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       });
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, subscription: sub.toJSON(), role: user.user_metadata?.role }),
       });
-    } catch {}
+      if (!res.ok) throw new Error('Failed to save subscription');
+    } catch (err) {
+      setNotifError(err instanceof Error ? err.message : 'Subscription failed');
+      setNotifStatus('error');
+      setNotifGranted(false);
+    }
   }
 
   function startTracking() {
@@ -328,17 +353,40 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
         <p className="text-[#4b5563] text-sm max-w-xs">Your admin will dispatch you when a job is ready. You&apos;ll get a notification.</p>
 
         {/* Notification setup */}
-        <button
-          onClick={notifGranted ? undefined : requestNotif}
-          className={`mt-6 flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-            notifGranted
-              ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default'
-              : 'border-[#1f1f1f] text-[#9ca3af] hover:border-[#800000]/40'
-          }`}
-        >
-          {notifGranted ? <Bell size={16} /> : <BellOff size={16} />}
-          {notifGranted ? 'Notifications enabled' : 'Enable dispatch notifications'}
-        </button>
+        <div className="mt-6 w-full max-w-xs">
+          <button
+            onClick={notifGranted ? undefined : requestNotif}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+              notifStatus === 'granted' ? 'bg-white border-white text-[#111111] shadow-md shadow-white/20 cursor-default' :
+              notifStatus === 'denied' ? 'border-red-500/40 text-red-400 bg-red-500/10' :
+              notifStatus === 'error' ? 'border-orange-500/40 text-orange-400 bg-orange-500/10' :
+              notifStatus === 'requesting' ? 'border-[#c9a84c]/40 text-[#c9a84c] animate-pulse' :
+              'border-[#1f1f1f] text-[#9ca3af] hover:border-[#800000]/40'
+            }`}
+          >
+            {notifStatus === 'granted' ? <Bell size={16} /> : <BellOff size={16} />}
+            {notifStatus === 'granted' ? 'Notifications enabled' :
+             notifStatus === 'denied' ? 'Blocked — tap for help' :
+             notifStatus === 'error' ? (notifError || 'Error — tap to retry') :
+             notifStatus === 'requesting' ? 'Requesting…' :
+             'Enable dispatch notifications'}
+          </button>
+
+          {(notifStatus === 'denied' || showNotifHelp) && (
+            <div className="mt-3 bg-[#111111] border border-red-500/20 rounded-xl p-3 text-left">
+              <p className="text-xs font-semibold text-red-400 mb-2">Notifications are blocked</p>
+              <ol className="text-xs text-[#9ca3af] space-y-1 list-decimal list-inside leading-relaxed">
+                <li>Tap the <strong className="text-[#f5f5f5]">🔒 lock icon</strong> in your browser address bar</li>
+                <li>Set <strong className="text-[#f5f5f5]">Notifications → Allow</strong></li>
+                <li>Refresh the page</li>
+              </ol>
+            </div>
+          )}
+
+          {notifStatus === 'error' && notifError && (
+            <p className="mt-2 text-xs text-orange-400 text-center">{notifError}</p>
+          )}
+        </div>
       </div>
     );
   }
