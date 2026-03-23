@@ -11,7 +11,7 @@
   --muted: #9ca3af;
 }
 
-/* Light mode — swap backgrounds/text, keep maroon */
+/* Light mode */
 html.light body { background: #f0f0f0 !important; color: #111111 !important; }
 html.light .bg-\[\#141414\] { background-color: #f0f0f0 !important; }
 html.light .bg-\[\#0d0d0d\] { background-color: #e8e8e8 !important; }
@@ -24,9 +24,7 @@ html.light .placeholder-\[\#4b5563\]::placeholder { color: #999999 !important; }
 html.light header { background-color: #e8e8e8 !important; }
 html.light header .bg-\[\#111111\] { background-color: #d8d8d8 !important; }
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
   background: var(--background);
@@ -34,38 +32,141 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Custom scrollbar */
+/* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
 ::-webkit-scrollbar-thumb { background: #800000; border-radius: 3px; }
-
-/* Horizontal scroll hide scrollbar */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Background patterns ── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.bg-dots {
+  background-image: radial-gradient(rgba(201,168,76,0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.bg-grid-maroon {
+  background-image:
+    linear-gradient(rgba(128,0,0,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128,0,0,0.08) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* ── Gradient text ── */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #ffffff 20%, #c9a84c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-maroon-gold {
+  background: linear-gradient(135deg, #cc0000 0%, #c9a84c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ── */
+.glow-card:hover {
+  box-shadow: 0 0 0 1px rgba(128,0,0,0.4), 0 8px 40px rgba(128,0,0,0.2);
+}
+
+.glow-card-gold:hover {
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.4), 0 8px 40px rgba(201,168,76,0.15);
+}
+
+.glow-btn {
+  box-shadow: 0 0 20px rgba(128,0,0,0.4);
+}
+.glow-btn:hover {
+  box-shadow: 0 0 35px rgba(128,0,0,0.6);
+}
+
+/* ── Shimmer border (gradient border trick) ── */
+.gradient-border {
+  position: relative;
+  background: #111111;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(128,0,0,0.6), rgba(201,168,76,0.4), rgba(128,0,0,0.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Number glow ── */
+.stat-glow {
+  text-shadow: 0 0 30px rgba(255,255,255,0.4), 0 0 60px rgba(255,255,255,0.15);
+}
+
+/* ── Section diagonal clip ── */
+.clip-diagonal {
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 0 100%);
+}
+.clip-diagonal-top {
+  clip-path: polygon(0 8%, 100% 0, 100% 100%, 0 100%);
+  margin-top: -40px;
+  padding-top: 80px;
+}
+
+/* ── Orb animations ── */
 @keyframes orb-float-1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(40px, -60px) scale(1.1); }
   66% { transform: translate(-30px, 30px) scale(0.95); }
 }
-
 @keyframes orb-float-2 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(-50px, 40px) scale(1.05); }
   66% { transform: translate(30px, -50px) scale(0.9); }
 }
-
 @keyframes orb-float-3 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(20px, 60px) scale(1.08); }
 }
-
 .orb-1 { animation: orb-float-1 18s ease-in-out infinite; }
 .orb-2 { animation: orb-float-2 22s ease-in-out infinite; }
 .orb-3 { animation: orb-float-3 15s ease-in-out infinite; }
 
+/* ── Bounce scroll indicator ── */
 @keyframes bounce-down {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(8px); }
 }
 .bounce-down { animation: bounce-down 2s ease-in-out infinite; }
+
+/* ── Shimmer sweep animation ── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.shimmer-text {
+  background: linear-gradient(90deg, #c9a84c 0%, #fff 40%, #c9a84c 60%, #c9a84c 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ── Pulse ring ── */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(128,0,0,0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(128,0,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(128,0,0,0); }
+}
+.pulse-ring { animation: pulse-ring 2.5s ease-out infinite; }

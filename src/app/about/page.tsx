@@ -79,7 +79,7 @@ export default function AboutPage() {
       <section className="relative pt-16 md:pt-[100px] bg-[#141414] overflow-hidden">
         <div className="relative w-full h-[420px] sm:h-[520px]">
           <Image
-            src="/office-exterior.jpg"
+            src="/building.jpg"
             alt="Bayou Office Machines"
             fill
             className="object-cover object-center"
@@ -144,42 +144,30 @@ export default function AboutPage() {
             </motion.p>
           </div>
 
-          <div className="flex flex-col gap-5">
-            <motion.div variants={fadeUp} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-6 hover:border-[#800000]/40 transition-colors">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#800000]/15 flex items-center justify-center">
-                  <Award size={16} className="text-[#800000]" />
-                </div>
-                <h3 className="font-bold text-[#f5f5f5]">Authorized Toshiba Dealer</h3>
+          <div className="flex flex-col gap-4">
+            <motion.div variants={fadeUp} className="relative rounded-2xl overflow-hidden h-52">
+              <Image src="/showroom.jpg" alt="Bayou Office Machines showroom" fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <p className="text-white font-bold text-sm">Our Showroom Floor</p>
+                <p className="text-white/70 text-xs">Full display of Toshiba & office equipment</p>
               </div>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">
-                Factory-authorized dealer and certified service center for the complete Toshiba
-                e-STUDIO MFP lineup. Our techs are trained by Toshiba and use genuine OEM parts.
-              </p>
             </motion.div>
-            <motion.div variants={fadeUp} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-6 hover:border-[#800000]/40 transition-colors">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#800000]/15 flex items-center justify-center">
-                  <Award size={16} className="text-[#800000]" />
-                </div>
-                <h3 className="font-bold text-[#f5f5f5]">Authorized Brother Dealer</h3>
+            <motion.div variants={fadeUp} className="relative rounded-2xl overflow-hidden h-44">
+              <Image src="/owner-desk.jpg" alt="Chip — Owner" fill className="object-cover object-top" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <p className="text-white font-bold text-sm">Chip — Owner</p>
+                <p className="text-white/70 text-xs">Bayou Office Machines, Larose LA</p>
               </div>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">
-                Full Brother product line for businesses of every size — laser printers, inkjet,
-                label makers, and compact multifunction devices. Sales, service, and supplies in-house.
-              </p>
             </motion.div>
-            <motion.div variants={fadeUp} className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-6 hover:border-[#800000]/40 transition-colors">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#800000]/15 flex items-center justify-center">
-                  <MapPin size={16} className="text-[#800000]" />
-                </div>
-                <h3 className="font-bold text-[#f5f5f5]">South Louisiana Coverage</h3>
+            <motion.div variants={fadeUp} className="relative rounded-2xl overflow-hidden h-40">
+              <Image src="/staff-office.jpg" alt="Staff at work" fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <p className="text-white font-bold text-sm">Our Team</p>
+                <p className="text-white/70 text-xs">Here to help, Monday – Friday</p>
               </div>
-              <p className="text-[#9ca3af] text-sm leading-relaxed">
-                Based in Larose, LA — we cover Lafourche, Terrebonne, Jefferson, and surrounding
-                parishes. Close enough to respond fast, experienced enough to get it right.
-              </p>
             </motion.div>
           </div>
         </div>
