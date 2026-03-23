@@ -467,6 +467,56 @@ export default function Home() {
       </Section>
 
       {/* ═══════════════════════════════════════════════
+          MANAGED PRINT SERVICES
+      ═══════════════════════════════════════════════ */}
+      <section className="py-24 px-6 bg-[#800000]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60 mb-3">
+                Cost Control
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-6">
+                Managed Print Services
+              </h2>
+              <p className="text-white/80 leading-relaxed mb-4">
+                Most businesses have no idea what they&apos;re actually spending on printing. Ink,
+                toner, paper, repairs, wasted pages — it adds up fast. Managed Print Services
+                (MPS) puts us in charge of tracking and optimizing your entire print environment.
+              </p>
+              <p className="text-white/80 leading-relaxed mb-8">
+                We monitor your fleet, keep supplies stocked automatically, schedule preventive
+                maintenance before problems start, and give you a predictable monthly cost instead
+                of surprise bills. Most customers see 20–30% savings in their first year.
+              </p>
+              <a
+                href="tel:9856937811"
+                className="inline-flex items-center gap-2 px-7 py-3.5 bg-white text-[#800000] font-bold text-sm rounded-lg hover:bg-white/90 transition-all duration-200"
+              >
+                Ask About MPS
+              </a>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { stat: "20–30%", label: "Average savings on print costs" },
+                { stat: "Auto", label: "Toner & supply replenishment" },
+                { stat: "Zero", label: "Surprise repair bills" },
+                { stat: "1 Bill", label: "Predictable monthly cost" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="bg-white/10 rounded-xl p-6 text-center border border-white/15"
+                >
+                  <div className="text-2xl sm:text-3xl font-extrabold text-white mb-2">{item.stat}</div>
+                  <div className="text-white/70 text-xs leading-snug">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════
           CORE VALUES
       ═══════════════════════════════════════════════ */}
       <Section id="values" className="py-24 px-6 bg-[#141414]">

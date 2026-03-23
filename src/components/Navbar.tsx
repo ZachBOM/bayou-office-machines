@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Settings, Sun, Moon, Phone, Mail } from "lucide-react";
+import { Menu, X, Settings, Sun, Moon, Phone, Mail, Gauge, Package } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -106,18 +106,10 @@ export default function Navbar() {
                 <Mail size={11} />
                 sales@bayouoffice.com
               </a>
-              <a
-                href="/#contact"
-                onClick={(e) => handleNavClick(e, "/#contact")}
-                className="text-white/90 hover:text-white transition-colors"
-              >
+              <a href="/order-supplies" className="text-white/90 hover:text-white transition-colors">
                 Order Supplies
               </a>
-              <a
-                href="/#contact"
-                onClick={(e) => handleNavClick(e, "/#contact")}
-                className="text-white/90 hover:text-white transition-colors"
-              >
+              <a href="/meter-read" className="text-white/90 hover:text-white transition-colors">
                 Submit Meter Read
               </a>
             </div>
@@ -228,12 +220,18 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden bg-zinc-900 border-t border-zinc-800 px-4 py-4 space-y-1">
             {/* Mobile utility links */}
-            <div className="flex gap-4 px-4 pb-3 border-b border-zinc-800 mb-2">
+            <div className="grid grid-cols-2 gap-2 px-4 pb-3 border-b border-zinc-800 mb-2">
               <a href="tel:9856937811" className="flex items-center gap-1.5 text-xs text-[#c9a84c]">
                 <Phone size={11} /> 985-693-7811
               </a>
               <a href="mailto:sales@bayouoffice.com" className="flex items-center gap-1.5 text-xs text-[#9ca3af]">
                 <Mail size={11} /> Email Us
+              </a>
+              <a href="/order-supplies" onClick={() => setMobileOpen(false)} className="flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-white">
+                <Package size={11} /> Order Supplies
+              </a>
+              <a href="/meter-read" onClick={() => setMobileOpen(false)} className="flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-white">
+                <Gauge size={11} /> Submit Meter Read
               </a>
             </div>
 

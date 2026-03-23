@@ -13,6 +13,15 @@ const navLinks = [
   { href: "#contact", label: "Contact" },
 ];
 
+const quickLinks = [
+  { href: "/meter-read", label: "Submit Meter Read" },
+  { href: "/order-supplies", label: "Order Supplies" },
+  { href: "/customer-portal", label: "Customer Portal" },
+  { href: "/about", label: "About Us" },
+  { href: "/services", label: "Our Services" },
+  { href: "/products", label: "Products" },
+];
+
 export default function Footer() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
@@ -81,17 +90,16 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Nav */}
+          {/* Quick Links */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-[#c9a84c] mb-4">
-              Navigation
+              Quick Links
             </h4>
             <ul className="space-y-2.5">
-              {navLinks.map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    onClick={(e) => handleNavClick(e, link.href)}
                     className="text-[#9ca3af] hover:text-[#f5f5f5] transition-colors text-sm"
                   >
                     {link.label}
