@@ -115,9 +115,9 @@ export default function Home() {
             priority
           />
           {/* Dark overlay so text stays readable */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/80" />
-          {/* Subtle maroon tint at bottom to blend into next section */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,#1a0000_0%,transparent_60%)]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/40" />
+          {/* Fade into the next section's background — no hard cut */}
+          <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-b from-transparent to-[#0d0d0d]" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center gap-6">
