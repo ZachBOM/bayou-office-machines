@@ -37,7 +37,7 @@ export default function CustomerPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-[#141414] flex pt-16">
+    <div className="min-h-screen bg-[#141414] flex pt-16 md:pt-[100px]">
       {/* Left — maroon panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#800000] flex-col justify-between p-12">
         <div>

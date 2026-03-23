@@ -201,7 +201,7 @@ export default function CRMPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#141414] pt-16">
+    <div className="min-h-screen bg-[#141414] pt-16 md:pt-[100px]">
       {/* Header */}
       <div className="border-b border-[#1f1f1f] bg-[#111111]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">

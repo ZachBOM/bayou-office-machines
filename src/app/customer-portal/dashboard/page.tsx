@@ -140,7 +140,7 @@ export default function CustomerDashboard() {
   const isAdminPreview = user?.user_metadata?.role === 'admin';
 
   return (
-    <div className="min-h-screen bg-[#141414] flex flex-col pt-16">
+    <div className="min-h-screen bg-[#141414] flex flex-col pt-16 md:pt-[100px]">
       {isAdminPreview && (
         <div className="bg-[#c9a84c]/10 border-b border-[#c9a84c]/30 px-6 py-2 flex items-center justify-between">
           <p className="text-[#c9a84c] text-xs font-semibold">Admin Preview — viewing as customer</p>

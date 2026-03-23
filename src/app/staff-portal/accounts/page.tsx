@@ -211,7 +211,7 @@ export default function AccountsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#141414] pt-16">
+    <div className="min-h-screen bg-[#141414] pt-16 md:pt-[100px]">
       {showCreate && (
         <CreateAccountModal
           onClose={() => setShowCreate(false)}

@@ -335,7 +335,7 @@ export default function AdminDashboard() {
   const name = user?.user_metadata?.name || user?.email;
 
   return (
-    <div className="min-h-screen bg-[#141414] pt-16">
+    <div className="min-h-screen bg-[#141414] pt-16 md:pt-[100px]">
       {showArticle && <NewArticleModal onClose={() => setShowArticle(false)} />}
 
       {/* Top bar */}

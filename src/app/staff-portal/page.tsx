@@ -88,7 +88,7 @@ export default function StaffPortal() {
   // ── Credentials step ─────────────────────────────────────────────
   if (step === 'credentials') {
     return (
-      <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6 pt-16">
+      <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6 pt-16 md:pt-[100px]">
         <div className="max-w-sm w-full">
           <div className="text-center mb-8">
             <div className="inline-block bg-[#800000]/10 border border-[#800000]/30 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#c9a84c] mb-6">
@@ -139,7 +139,7 @@ export default function StaffPortal() {
 
   // ── MFA verify step ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6 pt-16">
+    <div className="min-h-screen bg-[#141414] flex flex-col items-center justify-center px-6 pt-16 md:pt-[100px]">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-[#800000]/10 border border-[#800000]/30 flex items-center justify-center mx-auto mb-5">

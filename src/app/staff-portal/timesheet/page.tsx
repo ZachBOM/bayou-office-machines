@@ -124,7 +124,7 @@ export default function TimesheetPage() {
         }
       `}</style>
 
-      <div className="min-h-screen bg-[#141414] pt-16">
+      <div className="min-h-screen bg-[#141414] pt-16 md:pt-[100px]">
         <div className="max-w-3xl mx-auto px-6 py-10">
 
           {/* Header */}

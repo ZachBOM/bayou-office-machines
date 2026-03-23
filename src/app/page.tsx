@@ -105,15 +105,19 @@ export default function Home() {
           HERO
       ══════════════════════════════════════ */}
       <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden pt-16 md:pt-[100px]">
-        {/* Grid overlay */}
-        <div className="absolute inset-0 bg-grid pointer-events-none opacity-60" />
-
-        {/* Orbs */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="orb-1 absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#800000]/25 blur-[120px]" />
-          <div className="orb-2 absolute bottom-1/3 right-1/4 w-[400px] h-[400px] rounded-full bg-[#800000]/20 blur-[100px]" />
-          <div className="orb-3 absolute top-1/2 left-1/2 w-[300px] h-[300px] rounded-full bg-[#c9a84c]/10 blur-[80px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a0000_0%,#0a0a0a_65%)]" />
+        {/* Family photo background */}
+        <div className="absolute inset-0">
+          <Image
+            src="/family.jpg"
+            alt="Bayou Office Machines family"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Dark overlay so text stays readable */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/65 to-black/80" />
+          {/* Subtle maroon tint at bottom to blend into next section */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,#1a0000_0%,transparent_60%)]" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center gap-6">
