@@ -276,6 +276,15 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
     }
   }
 
+  function sendLocation(d: Dispatch, lat: number, lng: number) {
+    fetch('/api/dispatch/location', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dispatch_id: d.id, tech_id: user.id, lat, lng }),
+    });
+    lastSentRef.current = Date.now();
+  }
+
   function startTrackingForDispatch(d: Dispatch) {
     if (!navigator.geolocation) return;
     if (watchIdRef.current !== null) {
@@ -283,21 +292,19 @@ function DispatchTab({ user, status }: { user: User; status: Status }) {
       watchIdRef.current = null;
     }
     lastSentRef.current = 0;
+
+    // Send one ping immediately so admin sees location right away
+    navigator.geolocation.getCurrentPosition(
+      (pos) => sendLocation(d, pos.coords.latitude, pos.coords.longitude),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+
+    // Then keep watching and send every 30s
     const id = navigator.geolocation.watchPosition(
       (pos) => {
-        const now = Date.now();
-        if (now - lastSentRef.current < 30000) return;
-        lastSentRef.current = now;
-        fetch('/api/dispatch/location', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            dispatch_id: d.id,
-            tech_id: user.id,
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          }),
-        });
+        if (Date.now() - lastSentRef.current < 30000) return;
+        sendLocation(d, pos.coords.latitude, pos.coords.longitude);
       },
       () => {},
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
