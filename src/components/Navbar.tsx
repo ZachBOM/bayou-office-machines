@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, Settings, Sun, Moon } from "lucide-react";
+import { Menu, X, Settings, Sun, Moon, Phone, Mail } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
@@ -12,7 +12,7 @@ const navLinks = [
   { href: "/#hero", label: "Home" },
   { href: "/#about", label: "About" },
   { href: "/#services", label: "Services" },
-  { href: "/#highlights", label: "Equipment" },
+  { href: "/#products", label: "Equipment" },
   { href: "/articles", label: "Articles" },
   { href: "/#contact", label: "Contact" },
 ];
@@ -67,7 +67,6 @@ export default function Navbar() {
         } else {
           e.preventDefault();
           router.push("/");
-          // after navigation scroll to section
           setTimeout(() => {
             document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
           }, 400);
@@ -94,6 +93,38 @@ export default function Navbar() {
             : "bg-[#141414]/80 backdrop-blur-sm border-b border-transparent"
         }`}
       >
+        {/* ── Utility bar (desktop only) ── */}
+        <div className="hidden md:block bg-[#800000]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-9 text-xs">
+            <span className="text-white/80">13066 W. Main St., Larose, LA 70373 &nbsp;·&nbsp; Serving South Louisiana Since 1996</span>
+            <div className="flex items-center gap-5">
+              <a href="tel:9856937811" className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors">
+                <Phone size={11} />
+                985-693-7811
+              </a>
+              <a href="mailto:sales@bayouoffice.com" className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors">
+                <Mail size={11} />
+                sales@bayouoffice.com
+              </a>
+              <a
+                href="/#contact"
+                onClick={(e) => handleNavClick(e, "/#contact")}
+                className="text-white/90 hover:text-white transition-colors"
+              >
+                Order Supplies
+              </a>
+              <a
+                href="/#contact"
+                onClick={(e) => handleNavClick(e, "/#contact")}
+                className="text-white/90 hover:text-white transition-colors"
+              >
+                Submit Meter Read
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Main nav ── */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -131,7 +162,6 @@ export default function Navbar() {
 
             {/* Right buttons — desktop */}
             <div className="hidden md:flex items-center gap-3">
-              {/* Settings button */}
               <div className="relative">
                 <button
                   onClick={() => setSettingsOpen((p) => !p)}
@@ -197,6 +227,16 @@ export default function Navbar() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden bg-zinc-900 border-t border-zinc-800 px-4 py-4 space-y-1">
+            {/* Mobile utility links */}
+            <div className="flex gap-4 px-4 pb-3 border-b border-zinc-800 mb-2">
+              <a href="tel:9856937811" className="flex items-center gap-1.5 text-xs text-[#c9a84c]">
+                <Phone size={11} /> 985-693-7811
+              </a>
+              <a href="mailto:sales@bayouoffice.com" className="flex items-center gap-1.5 text-xs text-[#9ca3af]">
+                <Mail size={11} /> Email Us
+              </a>
+            </div>
+
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -208,7 +248,6 @@ export default function Navbar() {
               </a>
             ))}
 
-            {/* Light mode toggle in mobile */}
             <button
               onClick={toggleLightMode}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
@@ -249,7 +288,6 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* Close settings on outside click */}
       {settingsOpen && (
         <div className="fixed inset-0 z-40" onClick={() => setSettingsOpen(false)} />
       )}
