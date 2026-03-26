@@ -8,7 +8,7 @@ import Link from 'next/link';
 import {
   LogOut, Clock, Coffee, LogIn, FileText, Truck, SlidersHorizontal,
   ShieldCheck, ShieldOff, X, MapPin, Navigation, CheckCircle,
-  AlertCircle, Bell, BellOff, Play,
+  AlertCircle, Bell, BellOff, Play, Camera,
 } from 'lucide-react';
 
 type Action = 'clock_in' | 'clock_out' | 'break_start' | 'break_end';
@@ -597,6 +597,9 @@ function ClockPageInner() {
   const [tab, setTab] = useState<Tab>('clock');
   const [showMfa, setShowMfa] = useState(false);
   const [hasActiveDispatch, setHasActiveDispatch] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const tick = setInterval(() => setNow(new Date()), 1000);
@@ -609,6 +612,9 @@ function ClockPageInner() {
       const role = session.user.user_metadata?.role;
       if (role === 'customer') { router.push('/customer-portal'); return; }
       setUser(session.user);
+      if (session.user.user_metadata?.avatar_url) {
+        setAvatarUrl(session.user.user_metadata.avatar_url);
+      }
       await fetchEntries(session.user.id);
       await checkActiveDispatch(session.user.id);
       setLoading(false);
@@ -647,6 +653,22 @@ function ClockPageInner() {
     router.push('/staff-portal');
   }
 
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploadingAvatar(true);
+    const ext = file.name.split('.').pop();
+    const path = `${user.id}/avatar.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (!error) {
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+      setAvatarUrl(publicUrl);
+    }
+    setUploadingAvatar(false);
+    if (avatarFileRef.current) avatarFileRef.current.value = '';
+  }
+
   if (loading) {
     return <div className="min-h-screen bg-[#141414] flex items-center justify-center"><p className="text-[#9ca3af] text-sm">Loading...</p></div>;
   }
@@ -670,6 +692,13 @@ function ClockPageInner() {
       {tab === 'clock' && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
           <div className="text-center mb-12">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="Profile" className="w-14 h-14 rounded-full object-cover mx-auto mb-3 border-2 border-[#1f1f1f]" />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] flex items-center justify-center mx-auto mb-3">
+                <span className="text-xl font-bold text-[#4b5563]">{(name as string)?.[0]?.toUpperCase() ?? '?'}</span>
+              </div>
+            )}
             <p className="text-[#4b5563] text-sm mb-1">{now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
             <p className="text-7xl font-bold text-[#f5f5f5] tabular-nums tracking-tight">{now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
             <p className={`text-xl font-semibold mt-4 ${STATUS_COLORS[status]}`}>{STATUS_LABELS[status]}</p>
@@ -748,6 +777,36 @@ function ClockPageInner() {
       {tab === 'settings' && (
         <div className="flex-1 flex flex-col px-6 py-8">
           <h2 className="text-lg font-bold text-[#f5f5f5] mb-6">More</h2>
+
+          {/* Profile Picture */}
+          <div className="flex flex-col items-center mb-8">
+            <button
+              onClick={() => avatarFileRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="relative group"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="w-20 h-20 rounded-full object-cover border-2 border-[#1f1f1f]" />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] flex items-center justify-center">
+                  <span className="text-3xl font-bold text-[#4b5563]">{(name as string)?.[0]?.toUpperCase() ?? '?'}</span>
+                </div>
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Camera size={20} className="text-white" />
+              </div>
+            </button>
+            <p className="text-sm font-semibold text-[#f5f5f5] mt-3">{name}</p>
+            <button
+              onClick={() => avatarFileRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="text-xs text-[#800000] hover:text-[#c00000] mt-1 font-medium transition-colors disabled:opacity-50"
+            >
+              {uploadingAvatar ? 'Uploading…' : 'Change Photo'}
+            </button>
+            <input ref={avatarFileRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+          </div>
+
           <div className="space-y-3">
             <Link href="/staff-portal/timesheet" className="flex items-center justify-between bg-[#111111] border border-[#1f1f1f] rounded-xl px-4 py-4 hover:border-[#800000]/40 transition-colors">
               <div className="flex items-center gap-3"><FileText size={18} className="text-[#800000]" /><span className="text-sm font-medium text-[#f5f5f5]">View Timesheet</span></div>
